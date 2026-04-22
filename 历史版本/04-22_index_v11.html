@@ -175,7 +175,6 @@ body{font-family:'Noto Serif SC',serif;background:var(--bg-warm);color:var(--tex
 <div class="action-grid">
 <button class="main-btn" id="cultivate-btn"><i class="fas fa-leaf" style="display:block;font-size:1.6em;"></i>修炼<div class="hint">点击吐纳灵气</div></button>
 <button class="main-btn" id="auto-cultivate-btn"><i class="fas fa-sync" style="display:block;font-size:1.6em;"></i>闭关<div class="hint" id="auto-status">未开启</div></button>
-<button class="main-btn" id="auto-battle-btn" style="border-color:var(--vermilion);"><i class="fas fa-hand-fist" style="display:block;font-size:1.4em;"></i>历练<div class="hint" id="auto-battle-status">自动刷怪</div></button>
 </div>
 <div class="section-header" style="margin-top:25px;">历练挑战</div>
 <div class="enemy-card" id="enemy-card">
@@ -195,7 +194,6 @@ body{font-family:'Noto Serif SC',serif;background:var(--bg-warm);color:var(--tex
     <button class="ba-btn" id="ba-heal"><i class="fas fa-heart"></i> 治愈</button>
     <button class="ba-btn" id="ba-item"><i class="fas fa-flask"></i> 道具</button>
     <button class="ba-btn" id="ba-flee"><i class="fas fa-running"></i> 逃跑</button>
-    <button class="ba-btn" id="ba-autoskill" style="font-size:0.75em;"><i class="fas fa-magic"></i> <span id="autoskill-label">自动技能:开</span></button>
 </div>
 <button class="main-btn" id="battle-btn" style="margin-top:10px;grid-column:1/-1;"><i class="fas fa-crosshairs" style="display:block;font-size:1.4em;"></i>斩妖除魔</button>
 <button class="main-btn" id="boss-btn" style="margin-top:6px;grid-column:1/-1;border-color:var(--vermilion);color:var(--vermilion);display:none;"><i class="fas fa-skull" style="display:block;font-size:1.4em;"></i>挑战Boss</button>
@@ -348,22 +346,11 @@ core.on('winBattle', function(d) {
     addBattleLog('胜利！获得 ' + d.exp + ' 经验, ' + d.gold + ' 金币', 'system'); showToast('战斗胜利！', 'success');
     showBattleActions(false); updatePreviewEnemy(); updateUI();
     if (BGM.currentName === 'boss1' || BGM.currentName === 'boss2') BGM.playMainBGM();
-    // 自动历练：战斗结束后自动开始下一场
-    if (d.autoContinue && !gameState.currentEnemy) {
-        setTimeout(function(){ if (gameState.autoBattle && !gameState.currentEnemy) core.startBattle(); }, 600);
-    }
 });
 core.on('loseBattle', function(d) {
     addBattleLog('战斗失败...' + (d.rebirthBonus > 0 ? ' 脱胎换骨额外恢复' + Math.floor(d.rebirthBonus*100) + '%HP' : ''), 'system'); showToast('战斗失败，生命恢复' + Math.floor((0.1+(d.rebirthBonus||0))*100) + '%', 'error');
     showBattleActions(false); updatePreviewEnemy(); updateUI();
     if (BGM.currentName === 'boss1' || BGM.currentName === 'boss2') BGM.playMainBGM();
-    // 自动历练：战败后等待恢复再战（3秒后重试）
-    if (d.autoContinue && gameState.hp > gameState.maxHp * 0.3) {
-        setTimeout(function(){ if (gameState.autoBattle && !gameState.currentEnemy) core.startBattle(); }, 3000);
-    } else if (d.autoContinue) {
-        // HP太低，等久一点
-        setTimeout(function(){ if (gameState.autoBattle && !gameState.currentEnemy && gameState.hp > gameState.maxHp * 0.3) core.startBattle(); }, 8000);
-    }
 });
 core.on('toggleSetting', function(d) {
     var nm = {sound:'背景音乐', autoSave:'自动保存', animations:'动画效果'};
@@ -405,12 +392,6 @@ function updateUI() {
     document.getElementById('exp-fill').style.width = pct + '%';
     document.getElementById('exp-text').textContent = gameState.exp + '/' + gameState.expToNext;
     document.getElementById('auto-status').textContent = gameState.autoCultivate ? '闭关中...' : '未开启';
-    var abBtn = document.getElementById('auto-battle-btn');
-    var abStatus = document.getElementById('auto-battle-status');
-    if (gameState.autoBattle) { abBtn.style.borderColor = 'var(--jade-green)'; abBtn.style.color = 'var(--jade-green)'; abStatus.textContent = '历练中...'; }
-    else { abBtn.style.borderColor = 'var(--vermilion)'; abBtn.style.color = 'var(--vermilion)'; abStatus.textContent = '自动刷怪'; }
-    var asLabel = document.getElementById('autoskill-label');
-    if (asLabel) asLabel.textContent = gameState.autoSkillEnabled ? '自动技能:开' : '自动技能:关';
     var battleBtn = document.getElementById('battle-btn');
     if (gameState.currentEnemy) { battleBtn.disabled = true; battleBtn.innerHTML = '<i class="fas fa-crosshairs" style="display:block;font-size:1.4em;"></i>战斗中...'; }
     else { battleBtn.disabled = false; battleBtn.innerHTML = '<i class="fas fa-crosshairs" style="display:block;font-size:1.4em;"></i>斩妖除魔'; }
@@ -1194,15 +1175,6 @@ function bindEvents() {
     };
     document.getElementById('cultivate-btn').onclick = function(){core.cultivate();};
     document.getElementById('auto-cultivate-btn').onclick = function(){gameState.autoCultivate = !gameState.autoCultivate; updateUI(); showToast(gameState.autoCultivate?'闭关已开启':'闭关已关闭','success');};
-    document.getElementById('auto-battle-btn').onclick = function(){
-        gameState.autoBattle = !gameState.autoBattle; updateUI();
-        showToast(gameState.autoBattle?'自动历练已开启':'自动历练已关闭','success');
-        if (gameState.autoBattle && !gameState.currentEnemy) core.startBattle();
-    };
-    document.getElementById('ba-autoskill').onclick = function(){
-        gameState.autoSkillEnabled = !gameState.autoSkillEnabled; updateUI();
-        showToast(gameState.autoSkillEnabled?'自动技能已开启':'自动技能已关闭','system');
-    };
     document.getElementById('battle-btn').onclick = function(){core.startBattle();};
     document.getElementById('boss-btn').onclick = function(){core.startBossBattle();};
     document.getElementById('challenge-btn').onclick = function(){

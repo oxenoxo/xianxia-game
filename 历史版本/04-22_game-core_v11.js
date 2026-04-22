@@ -23,7 +23,7 @@ var REALMS = [
 
 /* ========== 技能 ========== */
 var SKILLS = [
-    {id:'fireball',name:'火球术',desc:'对敌人造成高额攻击伤害',maxLevel:10,cost:function(l){return l*100;},effect:function(l){return 1.5+l*0.25;},type:'attack',energyCost:8},
+    {id:'fireball',name:'火球术',desc:'对敌人造成1.8倍攻击伤害',maxLevel:10,cost:function(l){return l*100;},effect:function(l){return 1.8+l*0.2;},type:'attack',energyCost:10},
     {id:'heal',name:'治愈术',desc:'恢复10%+30点生命值',maxLevel:10,cost:function(l){return l*80;},effect:function(l){return 0.1+l*0.02;},type:'heal',energyCost:8},
     {id:'meditation',name:'冥想',desc:'提升修炼速度',maxLevel:10,cost:function(l){return l*120;},effect:function(l){return 1+l*0.1;},type:'cultivation',energyCost:0},
     {id:'strength',name:'力量强化',desc:'永久提升攻击力',maxLevel:10,cost:function(l){return l*150;},effect:function(l){return l*3;},type:'passive',energyCost:0},
@@ -283,7 +283,6 @@ var gameState = {
     achievements:[],
     arts:{}, artLevels:{}, enlightenment:0, immortalCooldown:0, battleShield:0,
     currentEnemy:null, autoCultivate:false,
-    autoBattle:false, autoSkillEnabled:true,
     battleMode:null, battleTurn:'player', playerActionLock:false,
     buffRage:0, buffFocus:0,
     stats:{
@@ -580,7 +579,7 @@ GameCore.prototype.sellEquip = function(uid) {
 GameCore.prototype.calcDamage = function(atk, def, luck, isPlayer) {
     var totalAtk = this.getTotalStat('atk') + atk;
     var totalDef = this.getTotalStat('def') + def;
-    var base = totalAtk * 1.5 / (1 + totalDef * 0.08);
+    var base = totalAtk * 1.2 / (1 + totalDef * 0.08);
     var dmg = Math.max(1, Math.floor(base + Math.random() * 5 - 2));
     if (gameState.buffRage > 0 && isPlayer) dmg = Math.floor(dmg * 1.5);
     var crit = Math.random() < (luck || 0) * 0.02;
@@ -687,7 +686,7 @@ GameCore.prototype.startBattle = function() {
     this.initDailyTasks(); gameState.stats.totalBattlesDay++;
     var boss = this.getAvailableBoss(); var tpl;
     if (boss && Math.random() < 0.25) tpl = boss; else tpl = this.getAvailableEnemies();
-    gameState.currentEnemy = this.scaleEnemy(tpl); gameState.battleMode = (tpl.isBoss && !gameState.autoBattle) ? 'manual' : 'auto';
+    gameState.currentEnemy = this.scaleEnemy(tpl); gameState.battleMode = tpl.isBoss ? 'manual' : 'auto';
     gameState.battleShield = 0;
     if (this.hasArt('aura_shield')) { gameState.battleShield = Math.floor(gameState.maxHp * this.getArtEffect('aura_shield')); }
     this.emit('battleStart', {enemy: gameState.currentEnemy, isBoss: tpl.isBoss, shield: gameState.battleShield});
@@ -709,51 +708,16 @@ GameCore.prototype.autoBattleTick = function() {
         gameState.hp = Math.min(gameState.maxHp, gameState.hp + Math.floor(gameState.maxHp * 0.4));
         this.emit('battleLog', {msg: '自动使用大还丹，恢复 ' + lgAmt + ' 点生命', cls: 'system'});
     }
-    // 自动技能：能量足够且有火球术时，50%概率释放技能
-    var usedSkill = false;
-    if (gameState.autoSkillEnabled) {
-        var fbLvl = gameState.skills['fireball'] || 0;
-        var healLvl = gameState.skills['heal'] || 0;
-        // 优先治愈：HP低于40%时自动治愈
-        if (healLvl > 0 && gameState.hp < gameState.maxHp * 0.4 && gameState.energy >= 8) {
-            gameState.energy -= 8;
-            var hsk = SKILLS.filter(function(s){return s.id==='heal';})[0];
-            var hpct = hsk.effect(healLvl);
-            var hamt = Math.floor(gameState.maxHp * hpct) + 30;
-            gameState.hp = Math.min(gameState.maxHp, gameState.hp + hamt);
-            this.emit('battleLog', {msg: '自动治愈术，恢复 ' + hamt + ' 点生命', cls: 'player-act'});
-            usedSkill = true;
-        }
-        // 火球术：能量足够时释放
-        else if (fbLvl > 0 && gameState.energy >= 8 && Math.random() < 0.5) {
-            gameState.energy -= 8;
-            var fsk = SKILLS.filter(function(s){return s.id==='fireball';})[0];
-            var fmult = fsk.effect(fbLvl);
-            var totalAtk = this.getTotalStat('atk');
-            var fDmg = Math.max(1, Math.floor(totalAtk * fmult / (1 + gameState.currentEnemy.def * 0.08) + Math.random() * 5));
-            if (gameState.currentEnemy.isBoss && this.hasArt('heavenly')) {
-                fDmg = Math.floor(fDmg * (1 + this.getArtEffect('heavenly')));
-            }
-            if (gameState.buffRage > 0) fDmg = Math.floor(fDmg * 1.5);
-            var fcrit = Math.random() < gameState.luck * 0.02;
-            if (fcrit) { fDmg = Math.floor(fDmg * 1.5); gameState.stats.totalCrits++; }
-            gameState.currentEnemy.hp -= fDmg;
-            this.emit('playerSkill', {dmg: fDmg, crit: fcrit, name: '火球术'});
-            if (gameState.currentEnemy.hp <= 0) { this.winBattle(); return false; }
-            usedSkill = true;
-        }
+    // 玩家攻击
+    var pR = this.calcDamage(gameState.atk, gameState.currentEnemy.def, gameState.luck, true);
+    var pDmg = pR.dmg;
+    // 天剑诀：对Boss伤害加成
+    if (gameState.currentEnemy.isBoss && this.hasArt('heavenly')) {
+        pDmg = Math.floor(pDmg * (1 + this.getArtEffect('heavenly')));
     }
-    // 普攻（未放技能时）
-    if (!usedSkill) {
-        var pR = this.calcDamage(gameState.atk, gameState.currentEnemy.def, gameState.luck, true);
-        var pDmg = pR.dmg;
-        if (gameState.currentEnemy.isBoss && this.hasArt('heavenly')) {
-            pDmg = Math.floor(pDmg * (1 + this.getArtEffect('heavenly')));
-        }
-        gameState.currentEnemy.hp -= pDmg;
-        this.emit('playerAttack', {dmg: pDmg, crit: pR.crit});
-        if (gameState.currentEnemy.hp <= 0) { this.winBattle(); return false; }
-    }
+    gameState.currentEnemy.hp -= pDmg;
+    this.emit('playerAttack', {dmg: pDmg, crit: pR.crit});
+    if (gameState.currentEnemy.hp <= 0) { this.winBattle(); return false; }
     // 万剑归宗：概率二次攻击
     if (this.hasArt('myriad') && Math.random() < this.getArtEffect('myriad')) {
         var pR2 = this.calcDamage(gameState.atk, gameState.currentEnemy.def, gameState.luck, true);
@@ -768,9 +732,12 @@ GameCore.prototype.autoBattleTick = function() {
     // 敌人攻击
     var eR = this.calcDamage(gameState.currentEnemy.atk, gameState.def, 0);
     var eDmg = eR.dmg;
+    // 金刚体：受伤减免
     if (this.hasArt('vajra')) { var redux = this.getArtEffect('vajra'); eDmg = Math.floor(eDmg * (1 - redux)); }
+    // 灵气护体：护盾先吸收伤害
     if (gameState.battleShield > 0) { var absorbed = Math.min(gameState.battleShield, eDmg); gameState.battleShield -= absorbed; eDmg -= absorbed; }
     gameState.hp -= eDmg;
+    // 不灭身：致命伤保留1HP
     if (gameState.hp <= 0 && this.hasArt('immortal') && gameState.immortalCooldown <= 0) {
         gameState.hp = 1; gameState.immortalCooldown = this.getArtEffect('immortal');
         eR.artImmortal = true;
@@ -809,8 +776,8 @@ GameCore.prototype.playerAttack = function() {
 GameCore.prototype.playerSkill = function() {
     if (gameState.playerActionLock || gameState.battleTurn !== 'player') return;
     var fbLvl = gameState.skills['fireball'] || 0; if (fbLvl <= 0) { this.emit('warning', {msg: '尚未学会火球术'}); return; }
-    if (gameState.energy < 8) { this.emit('warning', {msg: '能量不足'}); return; }
-    gameState.playerActionLock = true; gameState.energy -= 8;
+    if (gameState.energy < 10) { this.emit('warning', {msg: '能量不足'}); return; }
+    gameState.playerActionLock = true; gameState.energy -= 10;
     var sk = SKILLS.filter(function(s){return s.id==='fireball';})[0]; var mult = sk.effect(fbLvl);
     var totalAtk = this.getTotalStat('atk');
     var dmg = Math.max(1, Math.floor(totalAtk * mult / (1 + gameState.currentEnemy.def * 0.08) + Math.random() * 5));
@@ -948,7 +915,7 @@ GameCore.prototype.winBattle = function() {
     // 装备掉落
     var drop = this.rollEquipDrop();
     if (gameState.buffRage > 0) gameState.buffRage--;
-    var result = {exp: e.exp, gold: e.gold, luckDrop: luckDrop, equipDrop: drop, isBoss: e.isBoss, artHealAmt: artHealAmt, dungeonBonus: dungeonBonus, autoContinue: gameState.autoBattle};
+    var result = {exp: e.exp, gold: e.gold, luckDrop: luckDrop, equipDrop: drop, isBoss: e.isBoss, artHealAmt: artHealAmt, dungeonBonus: dungeonBonus};
     gameState.currentEnemy = null; gameState.battleMode = null;
     this.emit('winBattle', result);
     this.checkAchievements();
@@ -961,7 +928,7 @@ GameCore.prototype.loseBattle = function() {
     gameState.hp = Math.floor(gameState.maxHp * recoverPct);
     gameState.buffRage = 0; gameState.currentEnemy = null; gameState.battleMode = null;
     gameState.battleShield = 0;
-    this.emit('loseBattle', {rebirthBonus: this.hasArt('rebirth') ? this.getArtEffect('rebirth') : 0, autoContinue: gameState.autoBattle});
+    this.emit('loseBattle', {rebirthBonus: this.hasArt('rebirth') ? this.getArtEffect('rebirth') : 0});
 };
 
 /* ========== 技能/物品 ========== */
