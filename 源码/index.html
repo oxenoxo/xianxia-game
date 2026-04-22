@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宠物养成 - 放置养成游戏</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- 顶部状态栏 -->
+        <header id="status-bar">
+            <div class="status-left">
+                <span class="game-title">🐾 宠物养成</span>
+                <span id="offline-earnings" class="offline-popup" style="display:none;"></span>
+            </div>
+            <div class="status-center">
+                <div class="resource-item">
+                    <span class="resource-icon">💰</span>
+                    <span id="gold">0</span>
+                </div>
+                <div class="resource-item">
+                    <span class="resource-icon">💎</span>
+                    <span id="gem">0</span>
+                </div>
+                <div class="resource-item">
+                    <span class="resource-icon">⚡</span>
+                    <span id="energy">100/100</span>
+                </div>
+            </div>
+            <div class="status-right">
+                <span id="save-status">已保存</span>
+            </div>
+        </header>
+
+        <!-- 宠物区域 -->
+        <main id="main-area">
+            <div id="character-section">
+                <div id="character-display">
+                    <div id="character-avatar">
+                        <div class="avatar-circle">
+                            <span class="avatar-emoji">🐱</span>
+                        </div>
+                        <div id="cultivation-aura"></div>
+                    </div>
+                    <div id="character-info">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;">
+                            <h2 id="character-name">小猫咪</h2>
+                            <div id="pet-level-badge" style="background:var(--accent);color:white;padding:2px 8px;border-radius:10px;font-size:0.8em;">
+                                Lv.<span id="pet-level">1</span>
+                            </div>
+                        </div>
+                        <div class="level-display">
+                            <span>等级 </span>
+                            <span id="level">1</span>
+                            <span> | </span>
+                            <span id="realm">幼年期</span>
+                        </div>
+                        <div class="exp-bar-container">
+                            <div id="exp-bar" class="exp-bar">
+                                <span id="exp-text">0/100</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 训练按钮 -->
+                <div id="cultivation-panel">
+                    <button id="cultivate-btn" class="btn btn-cultivate">
+                        <span class="btn-icon">🏃</span>
+                        <span>训练</span>
+                        <span class="btn-hint">点击或自动</span>
+                    </button>
+                    <button id="auto-cultivate-btn" class="btn btn-auto">
+                        <span class="btn-icon">🔄</span>
+                        <span>自动训练</span>
+                        <span class="auto-status" id="auto-status">未开启</span>
+                    </button>
+                </div>
+
+                <!-- 对战区域 -->
+                <div id="battle-section">
+                    <h3>⚔️ 对战</h3>
+                    <div id="enemy-display">
+                        <div class="enemy-avatar">
+                            <span id="enemy-emoji">🐶</span>
+                        </div>
+                        <div class="enemy-info">
+                            <span id="enemy-name">小狗</span>
+                            <div class="enemy-hp-bar">
+                                <div id="enemy-hp" class="hp-fill"></div>
+                            </div>
+                            <span id="enemy-hp-text">50/50</span>
+                        </div>
+                    </div>
+                    <button id="battle-btn" class="btn btn-battle">
+                        <span>⚔️ 挑战</span>
+                    </button>
+                    <div id="battle-log"></div>
+                </div>
+            </div>
+
+            <!-- 右侧面板 -->
+            <div id="side-panels">
+                <!-- 属性面板 -->
+                <div class="panel" id="stats-panel">
+                    <h3>📊 属性</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">❤️ 体力</span>
+                            <span id="stat-hp" class="stat-value">100</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">⚔️ 攻击</span>
+                            <span id="stat-atk" class="stat-value">10</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">🛡️ 防御</span>
+                            <span id="stat-def" class="stat-value">5</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">⚡ 敏捷</span>
+                            <span id="stat-spd" class="stat-value">10</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">🍀 魅力</span>
+                            <span id="stat-luck" class="stat-value">1</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">✨ 智力</span>
+                            <span id="stat-comp" class="stat-value">1</span>
+                        </div>
+                    </div>
+                    <div id="pet-bonus-info" style="font-size:0.8em;color:var(--accent);margin-top:10px;display:none;">
+                        🐾 宠物加成: <span id="pet-bonus-stats"></span>
+                    </div>
+                    <button id="assign-stats-btn" class="btn btn-small">训练加点</button>
+                    <div id="free-points" class="free-points" style="display:none;">
+                        训练点数: <span id="free-points-num">0</span>
+                    </div>
+                </div>
+
+                <!-- 技能面板 -->
+                <div class="panel" id="skills-panel">
+                    <h3>🌟 技能</h3>
+                    <div id="skills-list" class="skills-list">
+                        <!-- 技能动态生成 -->
+                    </div>
+                    <button id="skill-tree-btn" class="btn btn-small">学习技能</button>
+                </div>
+
+                <!-- 背包面板 -->
+                <div class="panel" id="inventory-panel">
+                    <h3>🎒 背包</h3>
+                    <div id="inventory-list" class="inventory-list">
+                        <!-- 物品动态生成 -->
+                    </div>
+                    <button id="use-item-btn" class="btn btn-small">使用道具</button>
+                </div>
+
+                <!-- 成就面板 -->
+                <div class="panel" id="achievements-panel">
+                    <h3>🏆 成就</h3>
+                    <div id="achievements-list" class="achievements-list">
+                        <!-- 成就动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 底部功能栏 -->
+        <nav id="bottom-nav">
+            <button class="nav-btn active" data-tab="cultivation">训练</button>
+            <button class="nav-btn" data-tab="pets">🐾 宠物</button>
+            <button class="nav-btn" data-tab="skills">技能</button>
+            <button class="nav-btn" data-tab="inventory">背包</button>
+            <button class="nav-btn" data-tab="achievements">成就</button>
+            <button class="nav-btn" data-tab="shop">商店</button>
+            <button class="nav-btn" data-tab="settings">设置</button>
+        </nav>
+
+        <!-- 模态框 -->
+        <div id="modal-overlay" class="modal-overlay" style="display:none;">
+            <div id="modal-content" class="modal-content">
+                <button id="modal-close" class="modal-close">&times;</button>
+                <div id="modal-body"></div>
+            </div>
+        </div>
+
+        <!-- 提示信息 -->
+        <div id="toast-container"></div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

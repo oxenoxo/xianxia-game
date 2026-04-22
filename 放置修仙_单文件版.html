@@ -1,0 +1,2140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>放置修仙 - 放置养成游戏</title>
+    <style>
+/* 放置修仙 - 游戏样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg-primary: #0a0e27;
+    --bg-secondary: #151b3d;
+    --bg-tertiary: #1a2340;
+    --text-primary: #e0e0ff;
+    --text-secondary: #8892b0;
+    --accent: #64ffda;
+    --accent-dark: #4cd4b0;
+    --danger: #ff6b6b;
+    --warning: #ffd93d;
+    --success: #6bcb77;
+    --purple: #9b59b6;
+    --blue: #3498db;
+    --gold: #ffd700;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+#game-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 10px;
+}
+
+/* 顶部状态栏 */
+#status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border: 1px solid rgba(100, 255, 218, 0.1);
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.status-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.game-title {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: var(--accent);
+    text-shadow: 0 0 10px rgba(100, 255, 218, 0.5);
+}
+
+.status-center {
+    display: flex;
+    gap: 25px;
+    flex-wrap: wrap;
+}
+
+.resource-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.resource-icon {
+    font-size: 1.3em;
+}
+
+.status-right {
+    color: var(--success);
+    font-size: 0.9em;
+}
+
+/* 离线收益提示 */
+.offline-popup {
+    position: absolute;
+    background: var(--bg-tertiary);
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--accent);
+    animation: slideDown 0.3s ease;
+    z-index: 100;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 主区域布局 */
+#main-area {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+@media (max-width: 1024px) {
+    #main-area {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 角色区域 */
+#character-section {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid rgba(100, 255, 218, 0.1);
+}
+
+#character-display {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    margin-bottom: 20px;
+    padding: 20px;
+    background: var(--bg-tertiary);
+    border-radius: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+#character-avatar {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.avatar-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple), var(--blue));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4em;
+    box-shadow: 0 0 30px rgba(155, 89, 182, 0.5);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 30px rgba(155, 89, 182, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 50px rgba(155, 89, 182, 0.8);
+    }
+}
+
+#cultivation-aura {
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    animation: rotate 3s linear infinite;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+#cultivation-aura.active {
+    opacity: 1;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+#character-info {
+    flex: 1;
+    min-width: 200px;
+}
+
+#character-info h2 {
+    font-size: 1.8em;
+    margin-bottom: 10px;
+    color: var(--accent);
+}
+
+.level-display {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+}
+
+.exp-bar-container {
+    width: 100%;
+    height: 25px;
+    background: var(--bg-primary);
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+}
+
+.exp-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--blue));
+    border-radius: 12px;
+    transition: width 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85em;
+    font-weight: bold;
+    color: var(--bg-primary);
+    width: 0%;
+}
+
+/* 修炼面板 */
+#cultivation-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.btn {
+    padding: 15px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-cultivate {
+    background: linear-gradient(135deg, var(--purple), var(--blue));
+    color: white;
+}
+
+.btn-cultivate:hover {
+    box-shadow: 0 5px 20px rgba(155, 89, 182, 0.5);
+}
+
+.btn-auto {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 2px solid var(--accent);
+}
+
+.btn-auto.active {
+    background: linear-gradient(135deg, var(--accent), var(--blue));
+    border-color: transparent;
+}
+
+.btn-icon {
+    font-size: 1.5em;
+}
+
+.btn-hint, .auto-status {
+    font-size: 0.75em;
+    opacity: 0.8;
+}
+
+/* 战斗区域 */
+#battle-section {
+    background: var(--bg-tertiary);
+    padding: 20px;
+    border-radius: 12px;
+}
+
+#battle-section h3 {
+    margin-bottom: 15px;
+    color: var(--danger);
+}
+
+#enemy-display {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    padding: 15px;
+    background: var(--bg-primary);
+    border-radius: 8px;
+    flex-wrap: wrap;
+}
+
+.enemy-avatar {
+    font-size: 3em;
+}
+
+.enemy-info {
+    flex: 1;
+    min-width: 150px;
+}
+
+.enemy-hp-bar {
+    width: 100%;
+    height: 20px;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 8px 0;
+}
+
+.hp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--success), var(--accent));
+    border-radius: 10px;
+    transition: width 0.3s ease;
+    width: 100%;
+}
+
+#battle-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--danger), #e74c3c);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+#battle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(255, 107, 107, 0.5);
+}
+
+#battle-log {
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--bg-primary);
+    border-radius: 8px;
+    max-height: 100px;
+    overflow-y: auto;
+    font-size: 0.9em;
+}
+
+.battle-message {
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 右侧面板 */
+#side-panels {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.panel {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 15px;
+    border: 1px solid rgba(100, 255, 218, 0.1);
+}
+
+.panel h3 {
+    margin-bottom: 15px;
+    color: var(--accent);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    font-size: 0.9em;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+}
+
+.stat-value {
+    font-weight: bold;
+    color: var(--accent);
+}
+
+.btn-small {
+    width: 100%;
+    padding: 8px;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.3s;
+}
+
+.btn-small:hover {
+    background: var(--accent);
+    color: var(--bg-primary);
+}
+
+.free-points {
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    text-align: center;
+    color: var(--warning);
+    font-weight: bold;
+}
+
+/* 技能列表 */
+.skills-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.skill-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.skill-item:hover {
+    background: rgba(100, 255, 218, 0.1);
+}
+
+.skill-icon {
+    font-size: 1.5em;
+}
+
+.skill-info {
+    flex: 1;
+}
+
+.skill-name {
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.skill-desc {
+    font-size: 0.75em;
+    color: var(--text-secondary);
+}
+
+.skill-level {
+    color: var(--warning);
+    font-weight: bold;
+}
+
+/* 背包列表 */
+.inventory-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.item-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+
+.item-icon {
+    font-size: 1.3em;
+}
+
+.item-name {
+    flex: 1;
+}
+
+.item-quantity {
+    color: var(--text-secondary);
+}
+
+/* 成就列表 */
+.achievements-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.achievement-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    opacity: 0.5;
+    transition: all 0.3s;
+}
+
+.achievement-item.unlocked {
+    opacity: 1;
+    border: 1px solid var(--gold);
+}
+
+.achievement-icon {
+    font-size: 1.5em;
+}
+
+.achievement-info {
+    flex: 1;
+}
+
+.achievement-name {
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.achievement-desc {
+    font-size: 0.75em;
+    color: var(--text-secondary);
+}
+
+/* 底部导航 */
+#bottom-nav {
+    display: flex;
+    gap: 10px;
+    padding: 15px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid rgba(100, 255, 218, 0.1);
+    flex-wrap: wrap;
+}
+
+.nav-btn {
+    flex: 1;
+    min-width: 80px;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95em;
+    transition: all 0.3s;
+}
+
+.nav-btn:hover {
+    background: rgba(100, 255, 218, 0.1);
+    color: var(--accent);
+}
+
+.nav-btn.active {
+    background: linear-gradient(135deg, var(--accent), var(--blue));
+    color: var(--bg-primary);
+    font-weight: bold;
+}
+
+/* 模态框 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--bg-secondary);
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    border: 1px solid var(--accent);
+}
+
+.modal-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 2em;
+    cursor: pointer;
+}
+
+/* 提示信息 */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 2000;
+}
+
+.toast {
+    padding: 15px 20px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    animation: slideIn 0.3s ease;
+    max-width: 300px;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.toast.success {
+    border-color: var(--success);
+}
+
+.toast.warning {
+    border-color: var(--warning);
+}
+
+.toast.error {
+    border-color: var(--danger);
+}
+
+/* 商店样式 */
+.shop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.shop-item {
+    background: var(--bg-tertiary);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 2px solid transparent;
+}
+
+.shop-item:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.shop-item-icon {
+    font-size: 3em;
+    margin-bottom: 10px;
+}
+
+.shop-item-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.shop-item-price {
+    color: var(--gold);
+    font-weight: bold;
+}
+
+/* 设置面板 */
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.setting-label {
+    font-weight: bold;
+}
+
+/* 开关 */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-primary);
+    transition: 0.4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--accent);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    #status-bar {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .status-center {
+        width: 100%;
+        justify-content: space-around;
+    }
+    
+    #cultivation-panel {
+        grid-template-columns: 1fr;
+    }
+    
+    #bottom-nav {
+        flex-wrap: wrap;
+    }
+    
+    .nav-btn {
+        flex: 0 0 calc(50% - 5px);
+    }
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-dark);
+}
+
+/* 动画效果 */
+@keyframes levelUp {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.level-up {
+    animation: levelUp 0.5s ease;
+}
+
+@keyframes floatUp {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+}
+
+.floating-text {
+    position: absolute;
+    animation: floatUp 1s ease forwards;
+    font-weight: bold;
+    pointer-events: none;
+    z-index: 10;
+}
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- 顶部状态栏 -->
+        <header id="status-bar">
+            <div class="status-left">
+                <span class="game-title">⚡ 放置修仙</span>
+                <span id="offline-earnings" class="offline-popup" style="display:none;"></span>
+            </div>
+            <div class="status-center">
+                <div class="resource-item">
+                    <span class="resource-icon">💰</span>
+                    <span id="gold">0</span>
+                </div>
+                <div class="resource-item">
+                    <span class="resource-icon">💎</span>
+                    <span id="gem">0</span>
+                </div>
+                <div class="resource-item">
+                    <span class="resource-icon">⚡</span>
+                    <span id="energy">100/100</span>
+                </div>
+            </div>
+            <div class="status-right">
+                <span id="save-status">已保存</span>
+            </div>
+        </header>
+
+        <!-- 主角区域 -->
+        <main id="main-area">
+            <div id="character-section">
+                <div id="character-display">
+                    <div id="character-avatar">
+                        <div class="avatar-circle">
+                            <span class="avatar-emoji">🧘</span>
+                        </div>
+                        <div id="cultivation-aura"></div>
+                    </div>
+                    <div id="character-info">
+                        <h2 id="character-name">修行者</h2>
+                        <div class="level-display">
+                            <span>等级 </span>
+                            <span id="level">1</span>
+                            <span> | </span>
+                            <span id="realm">凡人</span>
+                        </div>
+                        <div class="exp-bar-container">
+                            <div id="exp-bar" class="exp-bar">
+                                <span id="exp-text">0/100</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 修炼按钮 -->
+                <div id="cultivation-panel">
+                    <button id="cultivate-btn" class="btn btn-cultivate">
+                        <span class="btn-icon">🧘</span>
+                        <span>修炼</span>
+                        <span class="btn-hint">点击或自动</span>
+                    </button>
+                    <button id="auto-cultivate-btn" class="btn btn-auto">
+                        <span class="btn-icon">🔄</span>
+                        <span>自动修炼</span>
+                        <span class="auto-status" id="auto-status">未开启</span>
+                    </button>
+                </div>
+
+                <!-- 战斗区域 -->
+                <div id="battle-section">
+                    <h3>⚔️ 历练</h3>
+                    <div id="enemy-display">
+                        <div class="enemy-avatar">
+                            <span id="enemy-emoji">🐺</span>
+                        </div>
+                        <div class="enemy-info">
+                            <span id="enemy-name">灰狼</span>
+                            <div class="enemy-hp-bar">
+                                <div id="enemy-hp" class="hp-fill"></div>
+                            </div>
+                            <span id="enemy-hp-text">50/50</span>
+                        </div>
+                    </div>
+                    <button id="battle-btn" class="btn btn-battle">
+                        <span>⚔️ 挑战</span>
+                    </button>
+                    <div id="battle-log"></div>
+                </div>
+            </div>
+
+            <!-- 右侧面板 -->
+            <div id="side-panels">
+                <!-- 属性面板 -->
+                <div class="panel" id="stats-panel">
+                    <h3>📊 属性</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">❤️ 生命</span>
+                            <span id="stat-hp" class="stat-value">100</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">⚔️ 攻击</span>
+                            <span id="stat-atk" class="stat-value">10</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">🛡️ 防御</span>
+                            <span id="stat-def" class="stat-value">5</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">⚡ 速度</span>
+                            <span id="stat-spd" class="stat-value">10</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">🍀 幸运</span>
+                            <span id="stat-luck" class="stat-value">1</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">✨ 悟性</span>
+                            <span id="stat-comp" class="stat-value">1</span>
+                        </div>
+                    </div>
+                    <button id="assign-stats-btn" class="btn-small">分配属性点</button>
+                    <div id="free-points" class="free-points" style="display:none;">
+                        可分配点数: <span id="free-points-num">0</span>
+                    </div>
+                </div>
+
+                <!-- 技能面板 -->
+                <div class="panel" id="skills-panel">
+                    <h3>🌟 技能</h3>
+                    <div id="skills-list" class="skills-list">
+                        <!-- 技能动态生成 -->
+                    </div>
+                </div>
+
+                <!-- 背包面板 -->
+                <div class="panel" id="inventory-panel">
+                    <h3>🎒 背包</h3>
+                    <div id="inventory-list" class="inventory-list">
+                        <!-- 物品动态生成 -->
+                    </div>
+                </div>
+
+                <!-- 成就面板 -->
+                <div class="panel" id="achievements-panel">
+                    <h3>🏆 成就</h3>
+                    <div id="achievements-list" class="achievements-list">
+                        <!-- 成就动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 底部功能栏 -->
+        <nav id="bottom-nav">
+            <button class="nav-btn active" data-tab="cultivation">修炼</button>
+            <button class="nav-btn" data-tab="skills">技能</button>
+            <button class="nav-btn" data-tab="inventory">背包</button>
+            <button class="nav-btn" data-tab="achievements">成就</button>
+            <button class="nav-btn" data-tab="shop">商店</button>
+            <button class="nav-btn" data-tab="settings">设置</button>
+        </nav>
+
+        <!-- 模态框 -->
+        <div id="modal-overlay" class="modal-overlay" style="display:none;">
+            <div class="modal-content">
+                <button id="modal-close" class="modal-close">&times;</button>
+                <div id="modal-body"></div>
+            </div>
+        </div>
+
+        <!-- 提示信息 -->
+        <div id="toast-container"></div>
+    </div>
+
+    <script>
+// ==================== 游戏配置 ====================
+const CONFIG = {
+    SAVE_KEY: 'cultivation_save',
+    SAVE_INTERVAL: 30000,
+    AUTO_CULTIVATE_INTERVAL: 1000,
+    OFFLINE_MAX_HOURS: 8,
+    ENERGY_REGEN_RATE: 5,
+    BATTLE_TICK: 1000,
+};
+
+// ==================== 游戏数据定义 ====================
+const REALMS = [
+    { name: '凡人', level: 1, color: '#8892b0' },
+    { name: '练气期', level: 5, color: '#64ffda' },
+    { name: '筑基期', level: 10, color: '#3498db' },
+    { name: '金丹期', level: 20, color: '#9b59b6' },
+    { name: '元婴期', level: 35, color: '#e74c3c' },
+    { name: '化神期', level: 50, color: '#ffd700' },
+    { name: '炼虚期', level: 70, color: '#ff6b6b' },
+    { name: '合体期', level: 90, color: '#4ecdc4' },
+    { name: '大乘期', level: 120, color: '#a8e6cf' },
+    { name: '渡劫期', level: 150, color: '#ffd93d' },
+    { name: '仙人', level: 200, color: '#ffffff' },
+];
+
+const SKILLS = [
+    {
+        id: 'fireball',
+        name: '火球术',
+        icon: '🔥',
+        desc: '发射火球攻击敌人',
+        maxLevel: 10,
+        cost: (level) => level * 100,
+        effect: (level) => level * 5,
+        type: 'attack',
+    },
+    {
+        id: 'heal',
+        name: '治愈术',
+        icon: '💚',
+        desc: '恢复生命值',
+        maxLevel: 10,
+        cost: (level) => level * 80,
+        effect: (level) => level * 10,
+        type: 'heal',
+    },
+    {
+        id: 'meditation',
+        name: '冥想',
+        icon: '🧘',
+        desc: '提升修炼速度',
+        maxLevel: 10,
+        cost: (level) => level * 120,
+        effect: (level) => 1 + level * 0.1,
+        type: 'cultivation',
+    },
+    {
+        id: 'strength',
+        name: '力量强化',
+        icon: '💪',
+        desc: '永久提升攻击力',
+        maxLevel: 10,
+        cost: (level) => level * 150,
+        effect: (level) => level * 3,
+        type: 'passive',
+    },
+    {
+        id: 'shield',
+        name: '护盾术',
+        icon: '🛡️',
+        desc: '提升防御力',
+        maxLevel: 10,
+        cost: (level) => level * 130,
+        effect: (level) => level * 2,
+        type: 'passive',
+    },
+    {
+        id: 'double_exp',
+        name: '双倍经验',
+        icon: '✨',
+        desc: '修炼获得双倍经验',
+        maxLevel: 5,
+        cost: (level) => level * 500,
+        effect: (level) => 1 + level * 0.5,
+        type: 'cultivation',
+    },
+];
+
+const ENEMIES = [
+    { id: 'wolf', name: '灰狼', emoji: '🐺', hp: 50, atk: 8, def: 2, exp: 20, gold: 10 },
+    { id: 'boar', name: '野猪', emoji: '🐗', hp: 80, atk: 12, def: 5, exp: 35, gold: 20 },
+    { id: 'snake', name: '毒蛇', emoji: '🐍', hp: 40, atk: 15, def: 1, exp: 25, gold: 15 },
+    { id: 'bear', name: '棕熊', emoji: '🐻', hp: 150, atk: 20, def: 10, exp: 60, gold: 40 },
+    { id: 'tiger', name: '猛虎', emoji: '🐯', hp: 200, atk: 30, def: 15, exp: 100, gold: 70 },
+    { id: 'dragon', name: '幼龙', emoji: '🐉', hp: 500, atk: 50, def: 30, exp: 300, gold: 200 },
+];
+
+const ITEMS = [
+    { id: 'potion_hp', name: '生命药水', icon: '🧪', desc: '恢复50点生命值', type: 'consumable', effect: 'heal_50' },
+    { id: 'potion_energy', name: '能量药水', icon: '⚡', desc: '恢复50点能量', type: 'consumable', effect: 'energy_50' },
+    { id: 'scroll_exp', name: '经验卷轴', icon: '📜', desc: '获得100点经验', type: 'consumable', effect: 'exp_100' },
+    { id: 'gem_box', name: '宝石盒', icon: '💎', desc: '获得10颗宝石', type: 'consumable', effect: 'gem_10' },
+    { id: 'sword', name: '铁剑', icon: '⚔️', desc: '攻击力+5', type: 'equipment', effect: 'atk_5', slot: 'weapon' },
+    { id: 'armor', name: '布甲', icon: '👕', desc: '防御力+3', type: 'equipment', effect: 'def_3', slot: 'armor' },
+];
+
+const SHOP_ITEMS = [
+    { id: 'potion_hp', name: '生命药水', icon: '🧪', price: 50, currency: 'gold' },
+    { id: 'potion_energy', name: '能量药水', icon: '⚡', price: 100, currency: 'gold' },
+    { id: 'scroll_exp', name: '经验卷轴', icon: '📜', price: 200, currency: 'gold' },
+    { id: 'gem_box', name: '宝石盒', icon: '💎', price: 10, currency: 'gem' },
+    { id: 'sword', name: '铁剑', icon: '⚔️', price: 500, currency: 'gold' },
+    { id: 'armor', name: '布甲', icon: '👕', price: 400, currency: 'gold' },
+];
+
+const ACHIEVEMENTS = [
+    { id: 'first_cultivate', name: '初入仙途', desc: '首次修炼', icon: '🌱', condition: (s) => s.stats.totalCultivations >= 1, reward: { gold: 50 } },
+    { id: 'level_10', name: '小有成就', desc: '达到10级', icon: '⭐', condition: (s) => s.level >= 10, reward: { gold: 500, gem: 5 } },
+    { id: 'level_50', name: '一方强者', desc: '达到50级', icon: '🌟', condition: (s) => s.level >= 50, reward: { gold: 5000, gem: 50 } },
+    { id: 'first_battle', name: '初试锋芒', desc: '首次战斗', icon: '⚔️', condition: (s) => s.stats.totalBattles >= 1, reward: { gold: 30 } },
+    { id: 'win_10', name: '战斗新手', desc: '胜利10场', icon: '🏅', condition: (s) => s.stats.totalWins >= 10, reward: { gold: 200 } },
+    { id: 'win_100', name: '战斗大师', desc: '胜利100场', icon: '🏆', condition: (s) => s.stats.totalWins >= 100, reward: { gold: 2000, gem: 20 } },
+    { id: 'gold_1000', name: '小富即安', desc: '累计获得1000金币', icon: '💰', condition: (s) => s.stats.totalGold >= 1000, reward: { gem: 10 } },
+    { id: 'learn_skill', name: '技能初悟', desc: '学会第一个技能', icon: '📖', condition: (s) => Object.values(s.skills).some(v => v > 0), reward: { gold: 100 } },
+    { id: 'all_skills_5', name: '技能精通', desc: '所有技能达到5级', icon: '🌠', condition: (s) => SKILLS.every(sk => (s.skills[sk.id] || 0) >= 5), reward: { gold: 5000, gem: 30 } },
+];
+
+// ==================== 游戏状态 ====================
+let gameState = {
+    level: 1,
+    exp: 0,
+    expToNext: 100,
+    realm: '凡人',
+    gold: 0,
+    gem: 0,
+    energy: 100,
+    maxEnergy: 100,
+    hp: 100,
+    maxHp: 100,
+    atk: 10,
+    def: 5,
+    spd: 10,
+    luck: 1,
+    comprehension: 1,
+    freePoints: 0,
+    skills: {},
+    equipment: {
+        weapon: null,
+        armor: null,
+    },
+    inventory: {},
+    achievements: [],
+    currentEnemy: null,
+    enemyHp: 0,
+    autoCultivate: false,
+    stats: {
+        totalCultivations: 0,
+        totalBattles: 0,
+        totalWins: 0,
+        totalGold: 0,
+        totalExp: 0,
+        totalDeaths: 0,
+        startTime: Date.now(),
+        lastSaveTime: Date.now(),
+        lastOnlineTime: Date.now(),
+    },
+    settings: {
+        sound: true,
+        autoSave: true,
+        animations: true,
+    },
+};
+
+// ==================== 游戏核心类 ====================
+class Game {
+    constructor() {
+        this.init();
+    }
+    
+    init() {
+        this.loadGame();
+        this.setupUI();
+        this.setupEventListeners();
+        this.startGameLoop();
+        this.checkOfflineEarnings();
+        this.updateUI();
+    }
+    
+    loadGame() {
+        const saved = localStorage.getItem(CONFIG.SAVE_KEY);
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                gameState = this.mergeDeep(gameState, parsed);
+            } catch (e) {
+                console.error('加载存档失败:', e);
+            }
+        }
+    }
+    
+    saveGame() {
+        try {
+            gameState.stats.lastSaveTime = Date.now();
+            localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(gameState));
+            this.showToast('游戏已保存', 'success');
+            document.getElementById('save-status').textContent = '已保存 ' + new Date().toLocaleTimeString();
+        } catch (e) {
+            console.error('保存失败:', e);
+            this.showToast('保存失败', 'error');
+        }
+    }
+    
+    mergeDeep(target, source) {
+        const output = { ...target };
+        if (this.isObject(target) && this.isObject(source)) {
+            Object.keys(source).forEach(key => {
+                if (this.isObject(source[key]) && key in target) {
+                    output[key] = this.mergeDeep(target[key], source[key]);
+                } else {
+                    output[key] = source[key];
+                }
+            });
+        }
+        return output;
+    }
+    
+    isObject(item) {
+        return item && typeof item === 'object' && !Array.isArray(item);
+    }
+    
+    checkOfflineEarnings() {
+        const lastTime = gameState.stats.lastOnlineTime;
+        const now = Date.now();
+        const offlineSeconds = (now - lastTime) / 1000;
+        
+        if (offlineSeconds > 60 && gameState.autoCultivate) {
+            const maxSeconds = CONFIG.OFFLINE_MAX_HOURS * 3600;
+            const effectiveSeconds = Math.min(offlineSeconds, maxSeconds);
+            const offlineMinutes = Math.floor(effectiveSeconds / 60);
+            
+            const baseExpPerMinute = 10 * this.getCultivationMultiplier();
+            const offlineExp = Math.floor(baseExpPerMinute * offlineMinutes * 0.5);
+            const offlineGold = Math.floor(offlineExp * 0.3);
+            
+            if (offlineExp > 0) {
+                this.gainExp(offlineExp);
+                this.gainGold(offlineGold);
+                
+                const popup = document.getElementById('offline-earnings');
+                popup.textContent = `离线收益: ${this.formatTime(offlineSeconds)} 获得 ${offlineExp} 经验, ${offlineGold} 金币`;
+                popup.style.display = 'block';
+                setTimeout(() => {
+                    popup.style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        gameState.stats.lastOnlineTime = now;
+    }
+    
+    getCultivationMultiplier() {
+        let multiplier = 1;
+        
+        const meditationLevel = gameState.skills['meditation'] || 0;
+        if (meditationLevel > 0) {
+            const skill = SKILLS.find(s => s.id === 'meditation');
+            multiplier *= skill.effect(meditationLevel);
+        }
+        
+        const doubleExpLevel = gameState.skills['double_exp'] || 0;
+        if (doubleExpLevel > 0) {
+            const skill = SKILLS.find(s => s.id === 'double_exp');
+            multiplier *= skill.effect(doubleExpLevel);
+        }
+        
+        return multiplier;
+    }
+    
+    cultivate() {
+        if (gameState.energy <= 0) {
+            this.showToast('能量不足!', 'warning');
+            return;
+        }
+        
+        gameState.energy = Math.max(0, gameState.energy - 1);
+        gameState.stats.totalCultivations++;
+        
+        const baseExp = 10;
+        const expGain = Math.floor(baseExp * this.getCultivationMultiplier());
+        this.gainExp(expGain);
+        
+        if (Math.random() < 0.3) {
+            const goldGain = Math.floor(Math.random() * 5) + 1;
+            this.gainGold(goldGain);
+        }
+        
+        this.showFloatingText(`+${expGain} EXP`, '#64ffda');
+        this.updateUI();
+    }
+    
+    gainExp(amount) {
+        gameState.exp += amount;
+        gameState.stats.totalExp += amount;
+        
+        while (gameState.exp >= gameState.expToNext) {
+            gameState.exp -= gameState.expToNext;
+            this.levelUp();
+        }
+        
+        this.updateUI();
+    }
+    
+    levelUp() {
+        gameState.level++;
+        gameState.freePoints += 2;
+        gameState.expToNext = Math.floor(gameState.expToNext * 1.5);
+        
+        this.updateRealm();
+        
+        gameState.maxHp += 10;
+        gameState.hp = gameState.maxHp;
+        gameState.atk += 2;
+        gameState.def += 1;
+        gameState.spd += 1;
+        
+        if (gameState.level % 5 === 0) {
+            gameState.maxEnergy += 20;
+            gameState.energy = gameState.maxEnergy;
+        }
+        
+        this.showLevelUpAnimation();
+        this.showToast(`升级! 等级 ${gameState.level}`, 'success');
+        this.checkAchievements();
+    }
+    
+    updateRealm() {
+        let newRealm = REALMS[0].name;
+        for (let i = REALMS.length - 1; i >= 0; i--) {
+            if (gameState.level >= REALMS[i].level) {
+                newRealm = REALMS[i].name;
+                break;
+            }
+        }
+        
+        if (newRealm !== gameState.realm) {
+            gameState.realm = newRealm;
+            this.showToast(`突破至 ${newRealm}!`, 'success');
+        }
+    }
+    
+    gainGold(amount) {
+        gameState.gold += amount;
+        gameState.stats.totalGold += amount;
+        this.updateUI();
+    }
+    
+    startBattle() {
+        const enemyIndex = Math.min(Math.floor(gameState.level / 10), ENEMIES.length - 1);
+        const enemyTemplate = ENEMIES[Math.min(enemyIndex, ENEMIES.length - 1)];
+        gameState.currentEnemy = { ...enemyTemplate };
+        gameState.enemyHp = enemyTemplate.hp;
+        
+        this.updateEnemyDisplay();
+        this.showToast(`遭遇 ${enemyTemplate.name}!`, 'warning');
+        
+        this.autoBattle();
+    }
+    
+    autoBattle() {
+        if (!gameState.currentEnemy || gameState.currentEnemy.hp <= 0) return;
+        
+        const battleInterval = setInterval(() => {
+            if (!gameState.currentEnemy) {
+                clearInterval(battleInterval);
+                return;
+            }
+            
+            const playerDmg = Math.max(1, gameState.atk - gameState.currentEnemy.def + Math.floor(Math.random() * 5));
+            gameState.currentEnemy.hp -= playerDmg;
+            
+            this.addBattleLog(`你对 ${gameState.currentEnemy.name} 造成 ${playerDmg} 点伤害`);
+            
+            if (gameState.currentEnemy.hp <= 0) {
+                this.winBattle();
+                clearInterval(battleInterval);
+                return;
+            }
+            
+            const enemyDmg = Math.max(1, gameState.currentEnemy.atk - gameState.def + Math.floor(Math.random() * 3));
+            gameState.hp -= enemyDmg;
+            
+            this.addBattleLog(`${gameState.currentEnemy.name} 对你造成 ${enemyDmg} 点伤害`);
+            
+            if (gameState.hp <= 0) {
+                this.loseBattle();
+                clearInterval(battleInterval);
+                return;
+            }
+            
+            this.updateEnemyDisplay();
+            this.updateUI();
+        }, CONFIG.BATTLE_TICK);
+    }
+    
+    winBattle() {
+        gameState.stats.totalBattles++;
+        gameState.stats.totalWins++;
+        
+        const expGain = gameState.currentEnemy.exp;
+        const goldGain = gameState.currentEnemy.gold;
+        
+        this.gainExp(expGain);
+        this.gainGold(goldGain);
+        
+        this.addBattleLog(`胜利! 获得 ${expGain} 经验, ${goldGain} 金币`);
+        this.showToast(`战斗胜利!`, 'success');
+        
+        gameState.currentEnemy = null;
+        this.updateEnemyDisplay();
+        this.checkAchievements();
+    }
+    
+    loseBattle() {
+        gameState.stats.totalBattles++;
+        gameState.stats.totalDeaths++;
+        
+        gameState.hp = Math.floor(gameState.maxHp * 0.1);
+        
+        this.addBattleLog('战斗失败...');
+        this.showToast('战斗失败, 生命值恢复10%', 'error');
+        
+        gameState.currentEnemy = null;
+        this.updateEnemyDisplay();
+    }
+    
+    updateUI() {
+        document.getElementById('gold').textContent = this.formatNumber(gameState.gold);
+        document.getElementById('gem').textContent = this.formatNumber(gameState.gem);
+        document.getElementById('energy').textContent = `${gameState.energy}/${gameState.maxEnergy}`;
+        
+        document.getElementById('level').textContent = gameState.level;
+        document.getElementById('realm').textContent = gameState.realm;
+        
+        const expPercent = (gameState.exp / gameState.expToNext) * 100;
+        document.getElementById('exp-bar').style.width = `${expPercent}%`;
+        document.getElementById('exp-text').textContent = `${this.formatNumber(gameState.exp)}/${this.formatNumber(gameState.expToNext)}`;
+        
+        document.getElementById('stat-hp').textContent = gameState.maxHp;
+        document.getElementById('stat-atk').textContent = gameState.atk;
+        document.getElementById('stat-def').textContent = gameState.def;
+        document.getElementById('stat-spd').textContent = gameState.spd;
+        document.getElementById('stat-luck').textContent = gameState.luck;
+        document.getElementById('stat-comp').textContent = gameState.comprehension;
+        
+        if (gameState.freePoints > 0) {
+            document.getElementById('free-points').style.display = 'block';
+            document.getElementById('free-points-num').textContent = gameState.freePoints;
+        } else {
+            document.getElementById('free-points').style.display = 'none';
+        }
+        
+        const autoBtn = document.getElementById('auto-cultivate-btn');
+        if (gameState.autoCultivate) {
+            autoBtn.classList.add('active');
+            document.getElementById('auto-status').textContent = '已开启';
+            document.getElementById('cultivation-aura').classList.add('active');
+        } else {
+            autoBtn.classList.remove('active');
+            document.getElementById('auto-status').textContent = '未开启';
+            document.getElementById('cultivation-aura').classList.remove('active');
+        }
+        
+        this.updateSkillsList();
+        this.updateInventoryList();
+        this.updateAchievementsList();
+    }
+    
+    updateEnemyDisplay() {
+        if (!gameState.currentEnemy) {
+            const enemyIndex = Math.min(Math.floor(gameState.level / 10), ENEMIES.length - 1);
+            const enemy = ENEMIES[Math.min(enemyIndex, ENEMIES.length - 1)];
+            document.getElementById('enemy-emoji').textContent = enemy.emoji;
+            document.getElementById('enemy-name').textContent = enemy.name;
+            document.getElementById('enemy-hp').style.width = '100%';
+            document.getElementById('enemy-hp-text').textContent = `${enemy.hp}/${enemy.hp}`;
+        } else {
+            const hpPercent = (gameState.currentEnemy.hp / gameState.currentEnemy.maxHp) * 100;
+            document.getElementById('enemy-emoji').textContent = gameState.currentEnemy.emoji;
+            document.getElementById('enemy-name').textContent = gameState.currentEnemy.name;
+            document.getElementById('enemy-hp').style.width = `${hpPercent}%`;
+            document.getElementById('enemy-hp-text').textContent = `${Math.max(0, gameState.currentEnemy.hp)}/${gameState.currentEnemy.maxHp}`;
+        }
+    }
+    
+    updateSkillsList() {
+        const container = document.getElementById('skills-list');
+        container.innerHTML = '';
+        
+        SKILLS.forEach(skill => {
+            const level = gameState.skills[skill.id] || 0;
+            const item = document.createElement('div');
+            item.className = 'skill-item';
+            item.onclick = () => this.upgradeSkill(skill.id);
+            
+            item.innerHTML = `
+                <div class="skill-icon">${skill.icon}</div>
+                <div class="skill-info">
+                    <div class="skill-name">${skill.name}</div>
+                    <div class="skill-desc">${skill.desc}</div>
+                </div>
+                <div class="skill-level">Lv.${level}/${skill.maxLevel}</div>
+            `;
+            
+            container.appendChild(item);
+        });
+    }
+    
+    updateInventoryList() {
+        const container = document.getElementById('inventory-list');
+        container.innerHTML = '';
+        
+        const items = Object.entries(gameState.inventory);
+        if (items.length === 0) {
+            container.innerHTML = '<div style="color:var(--text-secondary);text-align:center;padding:20px;">背包为空</div>';
+            return;
+        }
+        
+        items.forEach(([itemId, quantity]) => {
+            const item = ITEMS.find(i => i.id === itemId);
+            if (!item) return;
+            
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'item-item';
+            itemDiv.onclick = () => this.useItem(itemId);
+            
+            itemDiv.innerHTML = `
+                <div class="item-icon">${item.icon}</div>
+                <div class="item-name">${item.name}</div>
+                <div class="item-quantity">x${quantity}</div>
+            `;
+            
+            container.appendChild(itemDiv);
+        });
+    }
+    
+    updateAchievementsList() {
+        const container = document.getElementById('achievements-list');
+        container.innerHTML = '';
+        
+        ACHIEVEMENTS.forEach(achievement => {
+            const unlocked = gameState.achievements.includes(achievement.id);
+            const item = document.createElement('div');
+            item.className = `achievement-item ${unlocked ? 'unlocked' : ''}`;
+            
+            item.innerHTML = `
+                <div class="achievement-icon">${achievement.icon}</div>
+                <div class="achievement-info">
+                    <div class="achievement-name">${achievement.name}</div>
+                    <div class="achievement-desc">${achievement.desc}</div>
+                </div>
+            `;
+            
+            container.appendChild(item);
+        });
+    }
+    
+    upgradeSkill(skillId) {
+        const skill = SKILLS.find(s => s.id === skillId);
+        const currentLevel = gameState.skills[skillId] || 0;
+        
+        if (currentLevel >= skill.maxLevel) {
+            this.showToast('技能已满级', 'warning');
+            return;
+        }
+        
+        const cost = skill.cost(currentLevel + 1);
+        if (gameState.gold < cost) {
+            this.showToast('金币不足!', 'warning');
+            return;
+        }
+        
+        gameState.gold -= cost;
+        gameState.skills[skillId] = currentLevel + 1;
+        
+        if (skill.type === 'passive') {
+            if (skillId === 'strength') {
+                gameState.atk += skill.effect(1);
+            } else if (skillId === 'shield') {
+                gameState.def += skill.effect(1);
+            }
+        }
+        
+        this.showToast(`${skill.name} 升级到 Lv.${currentLevel + 1}`, 'success');
+        this.updateUI();
+        this.checkAchievements();
+    }
+    
+    checkAchievements() {
+        ACHIEVEMENTS.forEach(achievement => {
+            if (!gameState.achievements.includes(achievement.id) && achievement.condition(gameState)) {
+                gameState.achievements.push(achievement.id);
+                
+                if (achievement.reward.gold) {
+                    this.gainGold(achievement.reward.gold);
+                }
+                if (achievement.reward.gem) {
+                    gameState.gem += achievement.reward.gem;
+                }
+                
+                this.showToast(`成就解锁: ${achievement.name}`, 'success');
+            }
+        });
+    }
+    
+    buyItem(itemId) {
+        const shopItem = SHOP_ITEMS.find(i => i.id === itemId);
+        if (!shopItem) return;
+        
+        const item = ITEMS.find(i => i.id === itemId);
+        
+        if (shopItem.currency === 'gold' && gameState.gold < shopItem.price) {
+            this.showToast('金币不足!', 'warning');
+            return;
+        }
+        if (shopItem.currency === 'gem' && gameState.gem < shopItem.price) {
+            this.showToast('宝石不足!', 'warning');
+            return;
+        }
+        
+        if (shopItem.currency === 'gold') {
+            gameState.gold -= shopItem.price;
+        } else {
+            gameState.gem -= shopItem.price;
+        }
+        
+        if (!gameState.inventory[itemId]) {
+            gameState.inventory[itemId] = 0;
+        }
+        gameState.inventory[itemId]++;
+        
+        this.showToast(`购买成功: ${item.name}`, 'success');
+        this.updateUI();
+    }
+    
+    useItem(itemId) {
+        if (!gameState.inventory[itemId] || gameState.inventory[itemId] <= 0) {
+            this.showToast('物品不足', 'warning');
+            return;
+        }
+        
+        const item = ITEMS.find(i => i.id === itemId);
+        if (!item) return;
+        
+        if (item.effect === 'heal_50') {
+            gameState.hp = Math.min(gameState.maxHp, gameState.hp + 50);
+            this.showToast('生命值恢复50点', 'success');
+        } else if (item.effect === 'energy_50') {
+            gameState.energy = Math.min(gameState.maxEnergy, gameState.energy + 50);
+            this.showToast('能量恢复50点', 'success');
+        } else if (item.effect === 'exp_100') {
+            this.gainExp(100);
+            this.showToast('获得100点经验', 'success');
+        } else if (item.effect === 'gem_10') {
+            gameState.gem += 10;
+            this.showToast('获得10颗宝石', 'success');
+        }
+        
+        gameState.inventory[itemId]--;
+        if (gameState.inventory[itemId] <= 0) {
+            delete gameState.inventory[itemId];
+        }
+        
+        this.updateUI();
+    }
+    
+    setupEventListeners() {
+        document.getElementById('cultivate-btn').addEventListener('click', () => {
+            this.cultivate();
+        });
+        
+        document.getElementById('auto-cultivate-btn').addEventListener('click', () => {
+            gameState.autoCultivate = !gameState.autoCultivate;
+            this.updateUI();
+            this.showToast(gameState.autoCultivate ? '自动修炼已开启' : '自动修炼已关闭', 'success');
+        });
+        
+        document.getElementById('battle-btn').addEventListener('click', () => {
+            if (gameState.currentEnemy) {
+                this.showToast('当前有战斗进行中', 'warning');
+                return;
+            }
+            this.startBattle();
+        });
+        
+        document.getElementById('assign-stats-btn').addEventListener('click', () => {
+            this.showAssignStatsModal();
+        });
+        
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.switchTab(e.target.dataset.tab);
+            });
+        });
+        
+        document.getElementById('modal-close').addEventListener('click', () => {
+            document.getElementById('modal-overlay').style.display = 'none';
+        });
+        
+        document.getElementById('modal-overlay').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modal-overlay')) {
+                document.getElementById('modal-overlay').style.display = 'none';
+            }
+        });
+    }
+    
+    switchTab(tab) {
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.tab === tab) {
+                btn.classList.add('active');
+            }
+        });
+        
+        this.showModal(tab);
+    }
+    
+    showModal(content) {
+        const modal = document.getElementById('modal-overlay');
+        const body = document.getElementById('modal-body');
+        
+        switch (content) {
+            case 'cultivation':
+                modal.style.display = 'none';
+                return;
+            case 'skills':
+                this.showSkillsModal(body);
+                break;
+            case 'inventory':
+                this.showInventoryModal(body);
+                break;
+            case 'achievements':
+                this.showAchievementsModal(body);
+                break;
+            case 'shop':
+                this.showShopModal(body);
+                break;
+            case 'settings':
+                this.showSettingsModal(body);
+                break;
+        }
+        
+        modal.style.display = 'flex';
+    }
+    
+    showSkillsModal(body) {
+        body.innerHTML = '<h2>🌟 技能树</h2>';
+        
+        SKILLS.forEach(skill => {
+            const level = gameState.skills[skill.id] || 0;
+            const cost = skill.cost(level + 1);
+            const canUpgrade = level < skill.maxLevel && gameState.gold >= cost;
+            
+            const skillDiv = document.createElement('div');
+            skillDiv.className = 'skill-item';
+            skillDiv.style.marginBottom = '10px';
+            skillDiv.onclick = () => this.upgradeSkill(skill.id);
+            
+            skillDiv.innerHTML = `
+                <div class="skill-icon">${skill.icon}</div>
+                <div class="skill-info">
+                    <div class="skill-name">${skill.name} (Lv.${level}/${skill.maxLevel})</div>
+                    <div class="skill-desc">${skill.desc}</div>
+                    <div style="font-size:0.8em;color:var(--gold);">升级费用: ${this.formatNumber(cost)} 金币</div>
+                </div>
+                <button class="btn-small" style="${canUpgrade ? '' : 'opacity:0.5;'}" ${canUpgrade ? '' : 'disabled'}>
+                    ${level >= skill.maxLevel ? '已满级' : '升级'}
+                </button>
+            `;
+            
+            body.appendChild(skillDiv);
+        });
+    }
+    
+    showInventoryModal(body) {
+        body.innerHTML = '<h2>🎒 背包</h2>';
+        
+        const items = Object.entries(gameState.inventory);
+        if (items.length === 0) {
+            body.innerHTML += '<p style="color:var(--text-secondary);">背包为空</p>';
+            return;
+        }
+        
+        items.forEach(([itemId, quantity]) => {
+            const item = ITEMS.find(i => i.id === itemId);
+            if (!item) return;
+            
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'item-item';
+            itemDiv.style.marginBottom = '10px';
+            itemDiv.onclick = () => this.useItem(itemId);
+            
+            itemDiv.innerHTML = `
+                <div class="item-icon">${item.icon}</div>
+                <div class="item-name">${item.name}</div>
+                <div class="item-quantity">x${quantity}</div>
+            `;
+            
+            body.appendChild(itemDiv);
+        });
+    }
+    
+    showAchievementsModal(body) {
+        body.innerHTML = '<h2>🏆 成就</h2>';
+        
+        ACHIEVEMENTS.forEach(achievement => {
+            const unlocked = gameState.achievements.includes(achievement.id);
+            
+            const achDiv = document.createElement('div');
+            achDiv.className = `achievement-item ${unlocked ? 'unlocked' : ''}`;
+            achDiv.style.marginBottom = '10px';
+            
+            achDiv.innerHTML = `
+                <div class="achievement-icon">${achievement.icon}</div>
+                <div class="achievement-info">
+                    <div class="achievement-name">${achievement.name}</div>
+                    <div class="achievement-desc">${achievement.desc}</div>
+                    ${unlocked ? '<div style="font-size:0.8em;color:var(--gold);">已解锁</div>' : ''}
+                </div>
+            `;
+            
+            body.appendChild(achDiv);
+        });
+    }
+    
+    showShopModal(body) {
+        body.innerHTML = '<h2>🛒 商店</h2>';
+        
+        const shopGrid = document.createElement('div');
+        shopGrid.className = 'shop-grid';
+        
+        SHOP_ITEMS.forEach(item => {
+            const itemData = ITEMS.find(i => i.id === item.id);
+            const canBuy = item.currency === 'gold' ? gameState.gold >= item.price : gameState.gem >= item.price;
+            
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'shop-item';
+            itemDiv.onclick = () => this.buyItem(item.id);
+            
+            itemDiv.innerHTML = `
+                <div class="shop-item-icon">${itemData.icon}</div>
+                <div class="shop-item-name">${itemData.name}</div>
+                <div class="shop-item-price">${item.currency === 'gold' ? '💰' : '💎'} ${this.formatNumber(item.price)}</div>
+            `;
+            
+            shopGrid.appendChild(itemDiv);
+        });
+        
+        body.appendChild(shopGrid);
+    }
+    
+    showSettingsModal(body) {
+        body.innerHTML = '<h2>⚙️ 设置</h2>';
+        
+        const settings = [
+            { id: 'sound', name: '音效', desc: '开启游戏音效' },
+            { id: 'autoSave', name: '自动保存', desc: '每30秒自动保存游戏' },
+            { id: 'animations', name: '动画效果', desc: '开启UI动画效果' },
+        ];
+        
+        settings.forEach(setting => {
+            const div = document.createElement('div');
+            div.className = 'setting-item';
+            
+            div.innerHTML = `
+                <div>
+                    <div class="setting-label">${setting.name}</div>
+                    <div style="font-size:0.85em;color:var(--text-secondary);">${setting.desc}</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" ${gameState.settings[setting.id] ? 'checked' : ''} onchange="game.toggleSetting('${setting.id}')">
+                    <span class="slider"></span>
+                </label>
+            `;
+            
+            body.appendChild(div);
+        });
+        
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'btn-small';
+        saveBtn.style.marginTop = '20px';
+        saveBtn.textContent = '💾 手动保存';
+        saveBtn.onclick = () => this.saveGame();
+        body.appendChild(saveBtn);
+        
+        const resetBtn = document.createElement('button');
+        resetBtn.className = 'btn-small';
+        resetBtn.style.marginTop = '10px';
+        resetBtn.style.borderColor = 'var(--danger)';
+        resetBtn.style.color = 'var(--danger)';
+        resetBtn.textContent = '🗑️ 重置游戏';
+        resetBtn.onclick = () => {
+            if (confirm('确定要重置游戏吗? 此操作不可撤销!')) {
+                localStorage.removeItem(CONFIG.SAVE_KEY);
+                location.reload();
+            }
+        };
+        body.appendChild(resetBtn);
+    }
+    
+    showAssignStatsModal() {
+        const modal = document.getElementById('modal-overlay');
+        const body = document.getElementById('modal-body');
+        
+        body.innerHTML = '<h2>📊 分配属性点</h2>';
+        body.innerHTML += `<p>可分配点数: <strong style="color:var(--accent);">${gameState.freePoints}</strong></p>`;
+        
+        const stats = [
+            { id: 'hp', name: '❤️ 生命', desc: '每点+20生命', cost: 1 },
+            { id: 'atk', name: '⚔️ 攻击', desc: '每点+2攻击', cost: 1 },
+            { id: 'def', name: '🛡️ 防御', desc: '每点+1防御', cost: 1 },
+            { id: 'spd', name: '⚡ 速度', desc: '每点+1速度', cost: 1 },
+            { id: 'luck', name: '🍀 幸运', desc: '每点+1幸运', cost: 2 },
+            { id: 'comp', name: '✨ 悟性', desc: '每点+1悟性', cost: 2 },
+        ];
+        
+        stats.forEach(stat => {
+            const div = document.createElement('div');
+            div.className = 'setting-item';
+            div.onclick = () => this.assignStat(stat.id, stat.cost);
+            
+            div.innerHTML = `
+                <div>
+                    <div class="setting-label">${stat.name}</div>
+                    <div style="font-size:0.85em;color:var(--text-secondary);">${stat.desc}</div>
+                </div>
+                <button class="btn-small" ${gameState.freePoints >= stat.cost ? '' : 'disabled'}>
+                    升级 (${stat.cost}点)
+                </button>
+            `;
+            
+            body.appendChild(div);
+        });
+        
+        modal.style.display = 'flex';
+    }
+    
+    assignStat(statId, cost) {
+        if (gameState.freePoints < cost) {
+            this.showToast('属性点不足!', 'warning');
+            return;
+        }
+        
+        gameState.freePoints -= cost;
+        
+        switch (statId) {
+            case 'hp':
+                gameState.maxHp += 20;
+                gameState.hp += 20;
+                break;
+            case 'atk':
+                gameState.atk += 2;
+                break;
+            case 'def':
+                gameState.def += 1;
+                break;
+            case 'spd':
+                gameState.spd += 1;
+                break;
+            case 'luck':
+                gameState.luck += 1;
+                break;
+            case 'comp':
+                gameState.comprehension += 1;
+                break;
+        }
+        
+        this.showToast(`属性提升!`, 'success');
+        this.updateUI();
+        this.showAssignStatsModal();
+    }
+    
+    toggleSetting(settingId) {
+        gameState.settings[settingId] = !gameState.settings[settingId];
+        this.showToast(`${settingId} ${gameState.settings[settingId] ? '已开启' : '已关闭'}`, 'success');
+    }
+    
+    startGameLoop() {
+        setInterval(() => {
+            if (gameState.autoCultivate && gameState.energy > 0) {
+                this.cultivate();
+            }
+        }, CONFIG.AUTO_CULTIVATE_INTERVAL);
+        
+        setInterval(() => {
+            if (gameState.energy < gameState.maxEnergy) {
+                gameState.energy = Math.min(gameState.maxEnergy, gameState.energy + 1);
+                this.updateUI();
+            }
+        }, CONFIG.ENERGY_REGEN_RATE * 1000);
+        
+        setInterval(() => {
+            if (gameState.settings.autoSave) {
+                this.saveGame();
+            }
+        }, CONFIG.SAVE_INTERVAL);
+        
+        setInterval(() => {
+            gameState.stats.lastOnlineTime = Date.now();
+        }, 10000);
+    }
+    
+    setupUI() {
+        this.updateUI();
+        this.updateEnemyDisplay();
+    }
+    
+    formatNumber(num) {
+        if (num >= 1000000) {
+            return (num / 1000000).toFixed(1) + 'M';
+        }
+        if (num >= 1000) {
+            return (num / 1000).toFixed(1) + 'K';
+        }
+        return num.toString();
+    }
+    
+    formatTime(seconds) {
+        if (seconds < 60) return `${Math.floor(seconds)}秒`;
+        if (seconds < 3600) return `${Math.floor(seconds / 60)}分钟`;
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        return `${hours}小时${minutes}分钟`;
+    }
+    
+    showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+    
+    showFloatingText(text, color) {
+        if (!gameState.settings.animations) return;
+        
+        const float = document.createElement('div');
+        float.className = 'floating-text';
+        float.textContent = text;
+        float.style.color = color;
+        float.style.left = '50%';
+        float.style.top = '50%';
+        float.style.transform = 'translate(-50%, -50%)';
+        
+        document.getElementById('character-section').appendChild(float);
+        
+        setTimeout(() => {
+            float.remove();
+        }, 1000);
+    }
+    
+    showLevelUpAnimation() {
+        if (!gameState.settings.animations) return;
+        
+        const avatar = document.querySelector('.avatar-circle');
+        avatar.classList.add('level-up');
+        
+        setTimeout(() => {
+            avatar.classList.remove('level-up');
+        }, 500);
+    }
+    
+    addBattleLog(message) {
+        const log = document.getElementById('battle-log');
+        const msg = document.createElement('div');
+        msg.className = 'battle-message';
+        msg.textContent = message;
+        
+        log.appendChild(msg);
+        log.scrollTop = log.scrollHeight;
+        
+        while (log.children.length > 10) {
+            log.removeChild(log.firstChild);
+        }
+    }
+}
+
+// ==================== 启动游戏 ====================
+let game;
+
+document.addEventListener('DOMContentLoaded', () => {
+    game = new Game();
+    window.game = game;
+});
+    </script>
+</body>
+</html>

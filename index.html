@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>放置修仙 - 完整版</title>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+::root {
+    --ink-black:#0d0d0d;--paper-color:#e6e1d3;--gold-accent:#d4af37;--jade-green:#3a5a40;
+    --vermilion:#8b0000;--bg-warm:#f5f0e1;--bg-warm-dark:#d9d0b8;--text-primary:#333;--text-on-dark:#333;
+    --accent:var(--gold-accent);--danger:#c0392b;--success:#27ae60;--warning:#f39c12;
+    --quality-common:#9e9e9e;--quality-uncommon:#4caf50;--quality-rare:#2196f3;
+    --quality-epic:#9c27b0;--quality-legendary:#ff9800;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Noto Serif SC',serif;background:var(--bg-warm);color:var(--text-on-dark);min-height:100vh;display:flex;align-items:center;justify-content:center;overflow-x:hidden;background-image:radial-gradient(ellipse at 50% 30%,#f8f3e6 0%,#e8dfd0 60%,#d4c9b5 100%),url('https://www.transparenttextures.com/patterns/rice-paper-2.png');}
+.mist-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:url('https://www.transparenttextures.com/patterns/natural-paper.png');opacity:0.06;pointer-events:none;z-index:0;}
+#scroll-container{position:relative;width:95%;max-width:1300px;min-height:85vh;margin:30px auto;display:flex;z-index:10;}
+.scroll-rod{width:40px;background:linear-gradient(to right,#4a3728,#7a5c48 50%,#4a3728);border-radius:5px;box-shadow:5px 0 15px rgba(74,55,40,0.35);position:relative;flex-shrink:0;}
+.scroll-rod::before,.scroll-rod::after{content:'';position:absolute;left:-5px;width:50px;height:50px;background:radial-gradient(circle,var(--gold-accent),#8b7355);border-radius:50%;border:2px solid #4a3728;}
+.scroll-rod::before{top:-25px;}.scroll-rod::after{bottom:-25px;}
+.scroll-paper{background-color:var(--paper-color);background-image:url('https://www.transparenttextures.com/patterns/handmade-paper.png');flex:1;padding:30px;box-shadow:inset 0 0 50px rgba(0,0,0,0.15),8px 8px 24px rgba(74,55,40,0.25);border-left:2px solid #ccc;border-right:2px solid #ccc;display:grid;grid-template-columns:320px 1fr;gap:30px;color:var(--text-primary);overflow-y:auto;max-height:90vh;}
+#char-display-area{display:flex;flex-direction:column;align-items:center;border-right:1px solid rgba(0,0,0,0.1);padding-right:20px;}
+.avatar-frame{width:200px;height:200px;background:url("data:image/svg+xml,%3Csvg width='208' height='208' viewBox='0 0 208 208' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='104' cy='104' r='100' fill='none' stroke='%23d4af37' stroke-width='4'/%3E%3C/svg%3E") center/contain no-repeat;display:flex;align-items:center;justify-content:center;position:relative;filter:drop-shadow(0 0 10px rgba(212,175,55,0.3));}
+.avatar-img{width:150px;height:150px;border-radius:50%;object-fit:cover;border:3px double var(--gold-accent);}
+.realm-badge{font-family:'Ma Shan Zheng',cursive;font-size:2em;color:var(--vermilion);margin-top:12px;border-bottom:2px solid var(--vermilion);padding:0 18px;}
+.char-name{font-family:'Ma Shan Zheng',cursive;font-size:1.6em;margin:8px 0;letter-spacing:4px;}
+.stats-grid{width:100%;margin-top:15px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.stat-tag{background:rgba(139,0,0,0.1);border:1px solid rgba(139,0,0,0.18);padding:7px 10px;display:flex;justify-content:space-between;font-size:0.88em;border-radius:2px;}
+.stat-tag .val{color:var(--vermilion);font-weight:bold;}
+.stat-tag .bonus{color:var(--success);font-size:0.8em;margin-left:3px;}
+.progress-ink-container{width:100%;height:12px;background:rgba(74,55,40,0.15);border-radius:6px;overflow:hidden;margin:5px 0;border:1px solid rgba(74,55,40,0.1);}
+.progress-ink-fill{height:100%;background:linear-gradient(90deg,#a83232,#c0392b);transition:width 0.3s;box-shadow:0 0 8px rgba(192,57,43,0.35);}
+#content-area{display:flex;flex-direction:column;gap:15px;}
+.section-header{font-family:'Ma Shan Zheng',cursive;font-size:1.4em;border-bottom:1px solid #ccc;padding-bottom:5px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;}
+.resource-bar{display:flex;gap:20px;background:rgba(74,55,40,0.15);padding:10px 18px;border-radius:5px;margin-bottom:8px;flex-wrap:wrap;}
+.resource-item{font-weight:bold;color:var(--jade-green);font-size:1.05em;}
+.resource-item i{margin-right:4px;}
+.action-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px;}
+.main-btn{background:#fff;background-image:url('https://www.transparenttextures.com/patterns/natural-paper.png');border:2px solid #555;padding:18px 15px;font-family:'Ma Shan Zheng',cursive;font-size:1.3em;cursor:pointer;transition:all 0.3s;position:relative;box-shadow:3px 3px 0px #333;text-align:center;}
+.main-btn:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0px var(--vermilion);border-color:var(--vermilion);color:var(--vermilion);}
+.main-btn:active{transform:translate(1px,1px);box-shadow:1px 1px 0px #333;}
+.main-btn .hint{font-size:0.55em;margin-top:4px;opacity:0.7;}
+.main-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:1px 1px 0px #333;}
+.btn-small{width:100%;padding:8px;margin-top:8px;background:rgba(74,55,40,0.15);border:1px solid #999;border-radius:4px;cursor:pointer;font-family:inherit;font-size:0.9em;transition:all 0.2s;}
+.btn-small:hover{background:var(--vermilion);color:#fff;border-color:var(--vermilion);}
+.enemy-card{display:flex;gap:15px;align-items:center;background:rgba(74,55,40,0.15);padding:12px 15px;border-radius:5px;transition:transform 0.1s;}
+.enemy-card.boss-card{background:rgba(139,0,0,0.16);border:2px solid var(--vermilion);}
+.enemy-card.shake{animation:shakeAnim 0.3s;}
+@keyframes shakeAnim{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}50%{transform:translateX(-4px);}}
+.enemy-avatar{font-size:2.5em;}
+.enemy-info{flex:1;}
+.battle-log{background:rgba(255,255,255,0.6);border:1px solid #ddd;height:130px;overflow-y:auto;padding:10px;font-size:0.85em;line-height:1.7;border-radius:5px;margin-top:8px;}
+.battle-msg{padding:2px 0;border-bottom:1px solid rgba(74,55,40,0.08);}
+.battle-msg.crit{color:var(--vermilion);font-weight:bold;}
+.battle-msg.player-act{color:var(--jade-green);}
+.battle-msg.enemy-act{color:var(--danger);}
+.battle-msg.system{color:var(--gold-accent);font-style:italic;}
+#battle-actions{display:none;gap:8px;margin-top:10px;flex-wrap:wrap;justify-content:center;}
+#battle-actions .ba-btn{padding:10px 16px;background:#fff;border:2px solid #555;border-radius:4px;font-family:'Ma Shan Zheng',cursive;font-size:1.1em;cursor:pointer;transition:all 0.2s;}
+#battle-actions .ba-btn:hover{border-color:var(--vermilion);color:var(--vermilion);transform:translateY(-2px);}
+#battle-actions .ba-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+#bottom-selector{display:flex;justify-content:center;gap:12px;margin-top:15px;flex-wrap:wrap;}
+.nav-talisman{min-width:70px;padding:10px 14px;background:rgba(139,0,0,0.08);border:1px solid rgba(139,0,0,0.25);font-family:'Ma Shan Zheng',cursive;font-size:1.1em;cursor:pointer;transition:all 0.3s;text-align:center;clip-path:polygon(10% 0%,90% 0%,100% 10%,100% 90%,90% 100%,10% 100%,0% 90%,0% 10%);color:var(--vermilion);}
+.nav-talisman:hover,.nav-talisman.active{background:var(--vermilion);color:#fff;border-color:var(--gold-accent);}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(74,55,40,0.65);display:none;align-items:center;justify-content:center;z-index:1000;}
+.modal-content{background:#f8f3e6;background-image:url('https://www.transparenttextures.com/patterns/handmade-paper.png');padding:25px 30px;width:92%;max-width:600px;border:3px solid #4a3728;max-height:80vh;overflow-y:auto;color:var(--text-primary);border-radius:6px;position:relative;box-shadow:0 12px 40px rgba(74,55,40,0.5),inset 0 0 30px rgba(212,175,55,0.08);}
+.modal-close{position:absolute;top:10px;right:15px;font-size:1.8em;cursor:pointer;color:#999;line-height:1;}
+.modal-close:hover{color:var(--vermilion);}
+.panel-list-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(74,55,40,0.12);border-radius:5px;margin-bottom:7px;font-size:0.92em;transition:background 0.2s;cursor:pointer;}
+.panel-list-item:hover{background:rgba(139,0,0,0.15);}
+.panel-list-item .icon{font-size:1.4em;min-width:30px;text-align:center;}
+.panel-list-item .info{flex:1;}
+.panel-list-item .name{font-weight:bold;}
+.panel-list-item .desc{font-size:0.85em;color:#666;}
+.panel-list-item .action{color:var(--gold-accent);font-weight:bold;font-size:0.9em;}
+.equip-slots{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+.equip-slot{background:rgba(74,55,40,0.15);border:2px dashed rgba(74,55,40,0.4);border-radius:6px;padding:12px;text-align:center;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;}
+.equip-slot:hover{border-color:var(--gold-accent);}
+.equip-slot.filled{border-style:solid;border-color:var(--gold-accent);background:rgba(212,175,55,0.18);}
+.equip-slot .slot-label{font-size:0.75em;color:#776555;margin-bottom:4px;}
+.equip-slot .slot-item{font-size:0.9em;font-weight:bold;}
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-top:15px;}
+.shop-item{background:rgba(74,55,40,0.12);padding:15px 10px;border-radius:6px;text-align:center;cursor:pointer;transition:all 0.2s;border:2px solid transparent;}
+.shop-item:hover{border-color:var(--gold-accent);transform:translateY(-2px);}
+.shop-item .item-icon{font-size:2.5em;margin-bottom:8px;}
+.shop-item .price{color:var(--gold-accent);font-weight:bold;font-size:0.9em;}
+.quality-common{color:var(--quality-common);}.quality-uncommon{color:var(--quality-uncommon);}
+.quality-rare{color:var(--quality-rare);}.quality-epic{color:var(--quality-epic);}
+.quality-legendary{color:var(--quality-legendary);}
+.border-quality-common{border-color:var(--quality-common)!important;}.border-quality-uncommon{border-color:var(--quality-uncommon)!important;}
+.border-quality-rare{border-color:var(--quality-rare)!important;}.border-quality-epic{border-color:var(--quality-epic)!important;}
+.border-quality-legendary{border-color:var(--quality-legendary)!important;}
+#toast-container{position:fixed;top:20px;right:20px;z-index:3000;}
+.toast{padding:12px 18px;background:var(--paper-color);color:var(--text-primary);border:1px solid var(--gold-accent);border-radius:6px;margin-bottom:8px;animation:slideIn 0.3s ease;max-width:300px;font-size:0.95em;box-shadow:2px 2px 10px rgba(0,0,0,0.3);}
+@keyframes slideIn{from{opacity:0;transform:translateX(80px);}to{opacity:1;transform:translateX(0);}}
+@keyframes floatUp{from{opacity:1;transform:translateY(0);}to{opacity:0;transform:translateY(-50px);}}
+.floating-text{position:absolute;animation:floatUp 1s ease forwards;font-weight:bold;pointer-events:none;z-index:10;}
+.realm-break-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:2000;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(0,0,0,0);pointer-events:none;transition:background 0.5s;}
+.realm-break-overlay.active{background:rgba(74,55,40,0.85);pointer-events:auto;}
+.realm-break-text{font-family:'Ma Shan Zheng',cursive;font-size:4em;color:var(--gold-accent);opacity:0;transform:scale(0.5);transition:all 0.8s ease;text-shadow:0 0 30px rgba(212,175,55,0.8);}
+.realm-break-overlay.active .realm-break-text{opacity:1;transform:scale(1);}
+.realm-break-sub{font-family:'Ma Shan Zheng',cursive;font-size:1.5em;color:#fff;opacity:0;transition:opacity 0.5s 0.6s;}
+.realm-break-overlay.active .realm-break-sub{opacity:0.8;}
+.dmg-popup{position:absolute;font-weight:bold;pointer-events:none;z-index:20;animation:dmgFloat 0.8s ease forwards;}
+@keyframes dmgFloat{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-30px) scale(1.3);}}
+.player-dmg-popup{position:absolute;font-weight:bold;pointer-events:none;z-index:20;animation:playerDmgFloat 0.8s ease forwards;}
+@keyframes playerDmgFloat{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(30px) scale(1.3);}}
+.crit-flash{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,0,0,0.15);pointer-events:none;z-index:1999;animation:critFlashAnim 0.3s ease forwards;}
+@keyframes critFlashAnim{0%{opacity:1;}100%{opacity:0;}}
+.drop-glow{position:fixed;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at 50% 50%,rgba(255,215,0,0.2) 0%,transparent 60%);pointer-events:none;z-index:1999;animation:dropGlowAnim 1s ease forwards;}
+@keyframes dropGlowAnim{0%{opacity:1;}50%{opacity:0.8;}100%{opacity:0;}}
+@media(max-width:900px){
+    .scroll-paper{grid-template-columns:1fr;}
+    #char-display-area{border-right:none;border-bottom:1px solid rgba(0,0,0,0.1);padding-bottom:15px;padding-right:0;margin-bottom:15px;}
+    .scroll-rod{width:100%;height:30px;background:linear-gradient(to bottom,#4a3728,#7a5c48 50%,#4a3728);}
+    .scroll-rod::before{top:-5px;left:-20px;width:40px;height:40px;}
+    .scroll-rod::after{bottom:auto;top:-5px;right:-20px;left:auto;width:40px;height:40px;}
+    #scroll-container{flex-direction:column;}.action-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="mist-overlay"></div>
+<div class="realm-break-overlay" id="realm-break-overlay">
+    <div class="realm-break-text" id="realm-break-text"></div>
+    <div class="realm-break-sub" id="realm-break-sub"></div>
+</div>
+<div id="game-root">
+<div id="scroll-container">
+<div class="scroll-rod"></div>
+<div class="scroll-paper">
+<aside id="char-display-area">
+<div class="avatar-frame"><img class="avatar-img" src="avatar.png" alt="修仙者头像"></div>
+<div class="realm-badge" id="realm" style="cursor:pointer;" title="点击查看仙途">凡人</div>
+<div class="char-name" id="char-name">修行者</div>
+<div style="width:100%;margin:8px 0;">
+<div style="display:flex;justify-content:space-between;font-size:0.78em;margin-bottom:2px;"><span>灵力进度</span><span id="exp-text">0/100</span></div>
+<div class="progress-ink-container"><div class="progress-ink-fill" id="exp-fill" style="width:0%"></div></div>
+</div>
+<div class="stats-grid">
+<div class="stat-tag"><span><i class="fas fa-heart" style="color:#c0392b;"></i> 生命</span><span class="val" id="stat-hp">100</span></div>
+<div class="stat-tag"><span><i class="fas fa-crosshairs" style="color:#555;"></i> 攻击</span><span class="val" id="stat-atk">10</span></div>
+<div class="stat-tag"><span><i class="fas fa-shield-alt" style="color:#555;"></i> 防御</span><span class="val" id="stat-def">5</span></div>
+<div class="stat-tag"><span><i class="fas fa-bolt" style="color:#f39c12;"></i> 速度</span><span class="val" id="stat-spd">10</span></div>
+<div class="stat-tag"><span><i class="fas fa-clover" style="color:#27ae60;"></i> 幸运</span><span class="val" id="stat-luck">1</span><span style="font-size:0.7em;color:#999;" id="luck-tip"></span></div>
+<div class="stat-tag"><span><i class="fas fa-star" style="color:#f39c12;"></i> 悟性</span><span class="val" id="stat-comp">1</span><span style="font-size:0.7em;color:#999;" id="comp-tip"></span></div>
+</div>
+<button class="btn-small" id="assign-stats-btn">分配点数（剩余 <span id="free-points-num">0</span> 点）</button>
+</aside>
+<section id="content-area">
+<div class="resource-bar">
+<div class="resource-item"><i class="fas fa-coins"></i> <span id="gold">0</span></div>
+<div class="resource-item"><i class="fas fa-gem"></i> <span id="gem">0</span></div>
+<div class="resource-item"><i class="fas fa-lightbulb"></i> <span id="enlightenment">0</span></div>
+<div class="resource-item"><i class="fas fa-bolt"></i> <span id="energy">100/100</span></div>
+<div class="resource-item" style="margin-left:auto;font-size:0.85em;color:#888;" id="save-status">已保存</div>
+</div>
+<div id="tab-cultivation">
+<div class="section-header">仙路修行</div>
+<div class="action-grid">
+<button class="main-btn" id="cultivate-btn"><i class="fas fa-leaf" style="display:block;font-size:1.6em;"></i>修炼<div class="hint">点击吐纳灵气</div></button>
+<button class="main-btn" id="auto-cultivate-btn"><i class="fas fa-sync" style="display:block;font-size:1.6em;"></i>闭关<div class="hint" id="auto-status">未开启</div></button>
+</div>
+<div class="section-header" style="margin-top:25px;">历练挑战</div>
+<div class="enemy-card" id="enemy-card">
+<div class="enemy-avatar" id="enemy-emoji"><i class="fas fa-paw"></i></div>
+<div class="enemy-info">
+<div style="display:flex;align-items:center;gap:8px;">
+    <span id="enemy-name" style="font-weight:bold;">灰狼</span>
+    <span id="enemy-type-tag" style="font-size:0.7em;padding:2px 6px;border-radius:3px;display:none;"></span>
+</div>
+<div class="progress-ink-container"><div class="progress-ink-fill" id="enemy-hp-fill" style="width:100%"></div></div>
+<div id="enemy-hp-text" style="font-size:0.8em;text-align:right;">50/50</div>
+</div>
+</div>
+<div id="battle-actions">
+    <button class="ba-btn" id="ba-attack"><i class="fas fa-crosshairs"></i> 攻击</button>
+    <button class="ba-btn" id="ba-skill"><i class="fas fa-fire"></i> 技能</button>
+    <button class="ba-btn" id="ba-heal"><i class="fas fa-heart"></i> 治愈</button>
+    <button class="ba-btn" id="ba-item"><i class="fas fa-flask"></i> 道具</button>
+    <button class="ba-btn" id="ba-flee"><i class="fas fa-running"></i> 逃跑</button>
+</div>
+<button class="main-btn" id="battle-btn" style="margin-top:10px;grid-column:1/-1;"><i class="fas fa-crosshairs" style="display:block;font-size:1.4em;"></i>斩妖除魔</button>
+<button class="main-btn" id="boss-btn" style="margin-top:6px;grid-column:1/-1;border-color:var(--vermilion);color:var(--vermilion);display:none;"><i class="fas fa-skull" style="display:block;font-size:1.4em;"></i>挑战Boss</button>
+<div class="battle-log" id="battle-log"><div class="battle-msg system">欢迎来到放置修仙世界，道友。</div></div>
+</div>
+<div id="bottom-selector">
+<div class="nav-talisman active" data-tab="cultivation">修行</div>
+<div class="nav-talisman" data-tab="arts">悟道</div>
+<div class="nav-talisman" data-tab="skills">神通</div>
+<div class="nav-talisman" data-tab="equip">法器</div>
+<div class="nav-talisman" data-tab="inventory">宝库</div>
+<div class="nav-talisman" data-tab="achievements">功德</div>
+<div class="nav-talisman" data-tab="roadmap">仙途</div>
+<div class="nav-talisman" data-tab="shop">灵坊</div>
+<div class="nav-talisman" data-tab="settings">仙机</div>
+    <div class="nav-talisman" data-tab="daily" id="nav-daily" style="position:relative;">每日
+        <span id="daily-dot" style="display:none;position:absolute;top:2px;right:6px;width:7px;height:7px;background:var(--vermilion);border-radius:50%;"></span>
+    </div>
+</div>
+</section>
+</div>
+<div class="scroll-rod"></div>
+</div>
+</div>
+<div class="modal-overlay" id="modal-overlay"><div class="modal-content"><span class="modal-close" id="modal-close">&times;</span><div id="modal-body"></div></div></div>
+<div id="toast-container"></div>
+
+<script src="源码/game-core.js"></script>
+<script>
+/* ========== BGM 系统 ========== */
+var BGM = {
+    el: null, currentName: '',
+    tracks: {
+        main:   { url: 'music/jhon-cc-mandarin-calmly-music-2965.mp3', loop: true, volume: 0.35 },
+        morning:{ url: 'music/rainstreetcat-track-1-guzheng-morning-1-420792.mp3', loop: true, volume: 0.3 },
+        mystic: { url: 'music/vprodmusic_asia_bgm-mystical-guzheng-journey-143598.mp3', loop: true, volume: 0.3 },
+        boss1:  { url: 'music/oriental_jupiter-clouds-curl-around-the-ancient-pagoda-oj-339066.mp3', loop: false, volume: 0.5, clipStart:100, clipEnd:195 },
+        boss2:  { url: 'music/guzheng-soundtrack-cinematic-fantasy-_-ancient-asia-film-score-9-471792.mp3', loop: false, volume: 0.5, clipStart:200, clipEnd:370 },
+    },
+    play: function(name, stopCurrent) {
+        if (!gameState.settings.sound) return;
+        if (stopCurrent && this.el) { this.el.pause(); this.el = null; }
+        var track = this.tracks[name]; if (!track) return;
+        var vol = (gameState.settings.bgmVolume !== undefined) ? gameState.settings.bgmVolume : 0.5;
+        var el = new Audio(track.url); el.volume = Math.min(track.volume / 0.5 * vol, 1); el.loop = track.loop;
+        var self = this;
+        if (track.clipStart !== undefined) {
+            el.addEventListener('canplaythrough', function(){ el.currentTime = track.clipStart; el.play().catch(function(){}); self._startClipTimer(el, name, track.clipEnd - track.clipStart); }, { once: true }); el.load();
+        } else { el.play().catch(function(){}); }
+        el.addEventListener('ended', function(){ if (self.currentName === name && (name === 'boss1' || name === 'boss2')) self.playMainBGM(); });
+        this.el = el; this.currentName = name;
+    },
+    _startClipTimer: function(el, name, duration) {
+        var self = this; clearTimeout(this._clipTimer);
+        this._clipTimer = setTimeout(function(){ if (self.el === el) { el.pause(); if (name === 'boss1' || name === 'boss2') self.playMainBGM(); } }, duration * 1000);
+    },
+    stop: function() { clearTimeout(this._clipTimer); if (this.el) { this.el.pause(); this.el = null; } this.currentName = ''; },
+    playMainBGM: function() { var mains = ['main', 'morning', 'mystic']; this.play(mains[Math.floor(Math.random() * mains.length)], true); },
+    playBossBGM: function() { var bosses = ['boss1', 'boss2']; this.play(bosses[Math.floor(Math.random() * bosses.length)], true); },
+    setVolume: function(v) { if (this.el) { var track = this.tracks[this.currentName]; if (track) this.el.volume = Math.min(track.volume / 0.5 * v, 1); } }
+};
+
+/* ========== 敌人图标映射（渲染层专用） ========== */
+var ENEMY_ICONS = {
+    wolf:'<i class="fas fa-paw"></i>', boar:'<i class="fas fa-horse"></i>',
+    snake:'<i class="fas fa-staff-snake"></i>', bear:'<i class="fas fa-paw"></i>',
+    tiger:'<i class="fas fa-paw"></i>', dragon:'<i class="fas fa-dragon"></i>',
+    demon:'<i class="fas fa-skull"></i>', ancient:'<i class="fas fa-spider"></i>'
+};
+var EQUIP_ICONS = {
+    weapon:'<i class="fas fa-hammer"></i>', armor:'<i class="fas fa-vest"></i>', acc1:'<i class="fas fa-ring"></i>'
+};
+
+/* ========== 渲染层 ========== */
+var core = new GameCore();
+var _autoBattleInterval = null;
+
+/* ---- 监听核心事件 ---- */
+core.on('init', function() {
+    core.checkOfflineEarnings();
+    updateUI(); updatePreviewEnemy();
+    if (gameState.settings.bgmVolume) BGM.setVolume(gameState.settings.bgmVolume);
+});
+core.on('save', function(d) { document.getElementById('save-status').textContent = '已保存 ' + d.time; });
+core.on('warning', function(d) { showToast(d.msg, 'warning'); });
+core.on('error', function(d) { showToast(d.msg, 'error'); });
+core.on('info', function(d) { showToast(d.msg, 'system'); });
+core.on('offlineEarnings', function(d) { showToast((d.auto ? '闭关' : '离线') + '收益: ' + d.exp + '经验, ' + d.gold + '金币', 'success'); });
+core.on('cultivate', function(d) { showFloatingText('+' + d.exp + ' EXP', '#64ffda'); updateUI(); });
+core.on('levelUp', function(d) { showLevelUpAnim(); showToast('升级！等级 ' + d.level, 'success'); });
+core.on('realmBreak', function(d) { showRealmBreakAnim(d.name); });
+core.on('equip', function(d) { showToast('装备了 ' + d.name, 'success'); updateUI(); });
+core.on('unequip', function(d) { showToast('已卸下装备', 'success'); updateUI(); });
+core.on('sellEquip', function(d) { showToast('出售 ' + d.name + ' 获得 ' + d.price + ' 金币', 'success'); updateUI(); });
+core.on('enhanceSuccess', function(d) { showToast(d.name + (d.gem ? ' 宝石保底' : '') + ' 强化至 +' + d.level + '！', 'success'); updateUI(); });
+core.on('enhanceFail', function(d) { showToast('强化失败！', 'error'); updateUI(); });
+core.on('upgradeSkill', function(d) { showToast(d.name + ' → Lv.' + d.level, 'success'); updateUI(); });
+core.on('buyItem', function(d) { showToast('购买成功', 'success'); updateUI(); });
+core.on('useItem', function(d) { var msg = ''; if (d.healAmt) msg = '生命+' + d.healAmt; if (d.energyAmt) msg = '能量+' + d.energyAmt; if (d.expAmt) msg = '经验+' + d.expAmt; if (d.buff === 'rage') msg = '狂暴！3场战斗攻击+50%'; if (d.buff === 'focus') msg = '聚灵！5次修炼经验+100%'; if (d.gemAmt) msg = '宝石+' + d.gemAmt; showToast(msg, 'success'); updateUI(); });
+core.on('assignStat', function() { showToast('属性提升', 'success'); updateUI(); });
+core.on('achievement', function(d) { showToast('成就解锁：' + d.name, 'success'); });
+core.on('learnArt', function(d) { showToast('领悟神功：' + d.art.name, 'success'); updateUI(); });
+core.on('forgetArt', function(d) { showToast('遗忘神功：' + d.oldArt.name, 'warning'); updateUI(); });
+core.on('upgradeArt', function(d) { showToast(d.art.name + ' → Lv.' + d.level, 'success'); updateUI(); });
+
+/* ---- 战斗事件 ---- */
+core.on('battleStart', function(d) {
+    updateEnemyDisplay();
+    if (d.shield > 0) addBattleLog('灵气护体：获得 ' + d.shield + ' 点护盾', 'system');
+    showToast('遭遇 ' + d.enemy.name + '！', 'warning');
+    if (d.isBoss) {
+        addBattleLog('【Boss战】回合制战斗！', 'system');
+        gameState.battleTurn = 'player'; gameState.playerActionLock = false;
+        showBattleActions(true); BGM.playBossBGM();
+    } else {
+        addBattleLog('自动战斗中...', 'system');
+        showBattleActions(false); startAutoBattle();
+    }
+});
+core.on('playerAttack', function(d) { addBattleLog('对 ' + gameState.currentEnemy.name + ' 造成 ' + d.dmg + ' 点伤害' + (d.crit ? ' 【暴击】' : '') + (d.extraAttack ? ' 【万剑归宗】' : ''), d.crit ? 'crit' : 'player-act'); showDmgPopup(d.dmg, d.crit); if(d.crit) showCritFlash(); shakeEnemy(); });
+core.on('playerSkill', function(d) { addBattleLog(d.name + '命中 ' + gameState.currentEnemy.name + '，造成 ' + d.dmg + ' 点伤害' + (d.crit ? ' 【暴击】' : ''), d.crit ? 'crit' : 'player-act'); showDmgPopup(d.dmg, d.crit); if(d.crit) showCritFlash(); shakeEnemy(); });
+core.on('playerHeal', function(d) { addBattleLog('治愈术恢复了 ' + d.amt + ' 点生命', 'player-act'); updateUI(); });
+core.on('playerUseItem', function(d) { addBattleLog('使用生命药水，恢复 ' + d.amt + ' 点生命', 'player-act'); updateUI(); });
+core.on('bossSkill', function(d) { addBattleLog(d.name + ' 使用 ' + d.skill + '！造成 ' + d.dmg + ' 点伤害', 'enemy-act'); updateEnemyDisplay(); updateUI(); });
+core.on('enemyAttack', function(d) { addBattleLog((gameState.currentEnemy ? gameState.currentEnemy.name : '敌人') + ' 对你造成 ' + d.dmg + ' 点伤害' + (d.crit ? ' 【暴击】' : '') + (d.artImmortal ? ' 【不灭身触发！】' : ''), d.crit ? 'crit' : 'enemy-act'); showPlayerDmgPopup(d.dmg, d.crit); });
+core.on('stun', function() {
+    addBattleLog('你被束缚了！下回合无法行动', 'system');
+    gameState.playerActionLock = true; gameState.battleTurn = 'player';
+    var self = core;
+    setTimeout(function(){ gameState.playerActionLock = false; addBattleLog('束缚解除', 'system'); self.enemyTurn(); }, 1100);
+    updateEnemyDisplay(); updateUI();
+});
+core.on('fleeSuccess', function() { addBattleLog('成功逃离战斗！', 'system'); showToast('逃跑成功', 'success'); showBattleActions(false); updatePreviewEnemy(); updateUI(); if (BGM.currentName === 'boss1' || BGM.currentName === 'boss2') BGM.playMainBGM(); });
+core.on('fleeFail', function() { addBattleLog('逃跑失败！', 'system'); showToast('逃跑失败！', 'error'); });
+core.on('afterPlayerAction', function() { updateEnemyDisplay(); updateUI(); });
+core.on('winBattle', function(d) {
+    var qName = {common:'白色',uncommon:'绿色',rare:'蓝色',epic:'紫色',legendary:'橙色'};
+    if (d.artHealAmt > 0) addBattleLog('嗜血诀恢复 ' + d.artHealAmt + ' 点生命', 'system');
+    if (d.luckDrop) addBattleLog('幸运加成！+' + d.luckDrop.gold + '金币 +1宝石', 'system');
+    if (d.isBoss) addBattleLog('获得 1 宝石 +1 悟性点', 'system');
+    if (d.equipDrop) { addBattleLog('掉落装备：[' + qName[d.equipDrop.quality] + '] ' + d.equipDrop.name, 'system'); showDropGlow(); }
+    addBattleLog('胜利！获得 ' + d.exp + ' 经验, ' + d.gold + ' 金币', 'system'); showToast('战斗胜利！', 'success');
+    showBattleActions(false); updatePreviewEnemy(); updateUI();
+    if (BGM.currentName === 'boss1' || BGM.currentName === 'boss2') BGM.playMainBGM();
+});
+core.on('loseBattle', function(d) {
+    addBattleLog('战斗失败...' + (d.rebirthBonus > 0 ? ' 脱胎换骨额外恢复' + Math.floor(d.rebirthBonus*100) + '%HP' : ''), 'system'); showToast('战斗失败，生命恢复' + Math.floor((0.1+(d.rebirthBonus||0))*100) + '%', 'error');
+    showBattleActions(false); updatePreviewEnemy(); updateUI();
+    if (BGM.currentName === 'boss1' || BGM.currentName === 'boss2') BGM.playMainBGM();
+});
+core.on('toggleSetting', function(d) {
+    var nm = {sound:'背景音乐', autoSave:'自动保存', animations:'动画效果'};
+    if (d.id === 'sound') { if (d.value) BGM.playMainBGM(); else BGM.stop(); }
+    showToast((nm[d.id] || d.id) + ' ' + (d.value ? '已开启' : '已关闭'), 'success');
+});
+
+/* ---- 自动战斗（由渲染层驱动定时器） ---- */
+function startAutoBattle() {
+    if (_autoBattleInterval) clearInterval(_autoBattleInterval);
+    _autoBattleInterval = setInterval(function() {
+        if (!gameState.currentEnemy || gameState.battleMode !== 'auto') { clearInterval(_autoBattleInterval); _autoBattleInterval = null; return; }
+        var alive = core.autoBattleTick();
+        updateEnemyDisplay(); updateUI();
+        if (!alive) { clearInterval(_autoBattleInterval); _autoBattleInterval = null; }
+    }, CONFIG.BATTLE_TICK);
+}
+
+/* ---- UI 更新 ---- */
+function updateUI() {
+    /* 每日红点更新 */
+    var dot = document.getElementById('daily-dot');
+    if (dot && core.checkDailyTasks) { dot.style.display = core.checkDailyTasks().length > 0 ? 'block' : 'none'; }
+    var maxHp = gameState.maxHp;
+    document.getElementById('gold').textContent = gameState.gold;
+    document.getElementById('gem').textContent = gameState.gem;
+    document.getElementById('enlightenment').textContent = gameState.enlightenment || 0;
+    document.getElementById('energy').textContent = gameState.energy + '/' + gameState.maxEnergy;
+    document.getElementById('realm').textContent = gameState.realm;
+    document.getElementById('stat-hp').textContent = gameState.hp + '/' + maxHp;
+    var eb = gameState.equipBonus;
+    document.getElementById('stat-atk').innerHTML = core.getTotalStat('atk') + (eb.atk ? '<span class="bonus">+' + eb.atk + '</span>' : '');
+    document.getElementById('stat-def').innerHTML = core.getTotalStat('def') + (eb.def ? '<span class="bonus">+' + eb.def + '</span>' : '');
+    document.getElementById('stat-spd').innerHTML = gameState.spd + (eb.spd ? '<span class="bonus">+' + eb.spd + '</span>' : '');
+    document.getElementById('stat-luck').innerHTML = gameState.luck + (eb.luck ? '<span class="bonus">+' + eb.luck + '</span>' : '') + '<span style="font-size:0.7em;color:#999;">(暴击' + (gameState.luck * 2) + '%)</span>';
+    document.getElementById('stat-comp').innerHTML = gameState.comprehension + '<span style="font-size:0.7em;color:#999;">(经验+' + (gameState.comprehension * 5) + '%)</span>';
+    document.getElementById('free-points-num').textContent = gameState.freePoints;
+    var pct = (gameState.exp / gameState.expToNext) * 100;
+    document.getElementById('exp-fill').style.width = pct + '%';
+    document.getElementById('exp-text').textContent = gameState.exp + '/' + gameState.expToNext;
+    document.getElementById('auto-status').textContent = gameState.autoCultivate ? '闭关中...' : '未开启';
+    var battleBtn = document.getElementById('battle-btn');
+    if (gameState.currentEnemy) { battleBtn.disabled = true; battleBtn.innerHTML = '<i class="fas fa-crosshairs" style="display:block;font-size:1.4em;"></i>战斗中...'; }
+    else { battleBtn.disabled = false; battleBtn.innerHTML = '<i class="fas fa-crosshairs" style="display:block;font-size:1.4em;"></i>斩妖除魔'; }
+    var bossBtn = document.getElementById('boss-btn');
+    var availBoss = core.getAvailableBoss();
+    if (availBoss && !gameState.currentEnemy) { bossBtn.style.display = 'block'; bossBtn.innerHTML = '<i class="fas fa-skull" style="display:block;font-size:1.4em;"></i>挑战' + availBoss.name; }
+    else { bossBtn.style.display = 'none'; }
+}
+function updateEnemyDisplay() {
+    var e = gameState.currentEnemy; var card = document.getElementById('enemy-card');
+    if (!e) { updatePreviewEnemy(); return; }
+    document.getElementById('enemy-emoji').innerHTML = ENEMY_ICONS[e.id] || '<i class="fas fa-paw"></i>';
+    document.getElementById('enemy-name').textContent = e.name;
+    var typeTag = document.getElementById('enemy-type-tag');
+    if (e.isBoss) { typeTag.textContent = 'BOSS'; typeTag.style.display = 'inline'; typeTag.style.background = 'var(--vermilion)'; typeTag.style.color = '#fff'; card.className = 'enemy-card boss-card'; }
+    else { typeTag.style.display = 'none'; card.className = 'enemy-card'; }
+    var hpPct = (Math.max(0, e.hp) / e.maxHp) * 100;
+    document.getElementById('enemy-hp-fill').style.width = hpPct + '%';
+    document.getElementById('enemy-hp-text').textContent = Math.max(0, e.hp) + '/' + e.maxHp;
+}
+function updatePreviewEnemy() {
+    var boss = core.getAvailableBoss(); var normal = core.getAvailableEnemies(); var t = boss || normal;
+    document.getElementById('enemy-emoji').innerHTML = ENEMY_ICONS[t.id] || '<i class="fas fa-paw"></i>';
+    document.getElementById('enemy-name').textContent = t.name;
+    var typeTag = document.getElementById('enemy-type-tag'); var card = document.getElementById('enemy-card');
+    if (t.isBoss) { typeTag.textContent = 'BOSS'; typeTag.style.display = 'inline'; typeTag.style.background = 'var(--vermilion)'; typeTag.style.color = '#fff'; card.className = 'enemy-card boss-card'; }
+    else { typeTag.style.display = 'none'; card.className = 'enemy-card'; }
+    var sc = core.scaleEnemy(t);
+    document.getElementById('enemy-hp-fill').style.width = '100%';
+    document.getElementById('enemy-hp-text').textContent = sc.maxHp + '/' + sc.maxHp;
+}
+function showBattleActions(show) { document.getElementById('battle-actions').style.display = show ? 'flex' : 'none'; }
+
+/* ---- 模态框渲染 ---- */
+function showModal(tab) {
+    var ov = document.getElementById('modal-overlay'); var body = document.getElementById('modal-body'); ov.style.display = 'flex';
+    if (tab === 'cultivation') { ov.style.display = 'none'; return; }
+    if (tab === 'daily') renderDailyModal(body);
+    if (tab === 'arts') renderArtsModal(body);
+    if (tab === 'skills') renderSkillsModal(body);
+    if (tab === 'equip') renderEquipModal(body);
+    if (tab === 'inventory') renderInventoryModal(body);
+    if (tab === 'achievements') renderAchievementsModal(body);
+    if (tab === 'roadmap') renderRoadmapModal(body);
+    if (tab === 'shop') renderShopModal(body);
+    if (tab === 'settings') renderSettingsModal(body);
+}
+function renderArtsModal(body) {
+    body.innerHTML = '<h3 style="font-family:\'Ma Shan Zheng\',cursive;font-size:1.5em;margin-bottom:10px;">悟道参禅</h3>';
+    body.innerHTML += '<div style="margin-bottom:12px;padding:8px 12px;background:rgba(74,55,40,0.15);border-radius:5px;font-size:0.9em;"><i class="fas fa-lightbulb" style="color:var(--gold-accent);"></i> 悟性点：<strong style="color:var(--gold-accent);">' + gameState.enlightenment + '</strong>　每流派三选一，不可兼得</div>';
+    ART_SCHOOLS.forEach(function(school) {
+        var unlocked = gameState.level >= school.unlockLevel;
+        var selectedArt = gameState.arts[school.id] || null;
+        var schoolArts = ARTS.filter(function(a){return a.school === school.id;});
+        var schoolDiv = document.createElement('div');
+        schoolDiv.style.cssText = 'margin-bottom:15px;padding:12px;border:2px solid ' + (unlocked ? school.color : '#ccc') + ';border-radius:8px;background:' + (unlocked ? 'rgba(74,55,40,0.12)' : 'rgba(74,55,40,0.18)') + ';';
+        if (!unlocked) schoolDiv.style.opacity = '0.5';
+        var header = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-family:\'Ma Shan Zheng\',cursive;font-size:1.3em;color:' + school.color + ';">' + school.icon + ' ' + school.name + '</span><span style="font-size:0.85em;color:#999;">' + (unlocked ? '已解锁' : 'Lv.' + school.unlockLevel + '解锁') + '</span></div>';
+        schoolDiv.innerHTML = header;
+        schoolArts.forEach(function(art) {
+            var isLearned = selectedArt === art.id;
+            var lvl = gameState.artLevels[art.id] || 0;
+            var d = document.createElement('div');
+            d.className = 'panel-list-item';
+            d.style.cssText = isLearned ? 'background:rgba(212,175,55,0.18);border:1px solid var(--gold-accent);' : '';
+            var effectText = '';
+            if (art.type === 'on_kill') effectText = '击杀恢复' + Math.floor(art.effect(Math.max(1,lvl))*100) + '%最大HP';
+            if (art.type === 'defensive') effectText = '受伤减少' + Math.floor(art.effect(Math.max(1,lvl))*100) + '%';
+            if (art.type === 'on_fatal') effectText = '致命保留1HP（冷却' + art.effect(Math.max(1,lvl)) + '场）';
+            if (art.type === 'crit_boost') effectText = '暴击伤害+' + Math.floor(art.effect(Math.max(1,lvl))*100) + '%';
+            if (art.type === 'extra_attack') effectText = Math.floor(art.effect(Math.max(1,lvl))*100) + '%概率二次攻击';
+            if (art.type === 'boss_dmg') effectText = 'Boss伤害+' + Math.floor(art.effect(Math.max(1,lvl))*100) + '%';
+            if (art.type === 'exp_boost') effectText = '修炼经验+' + Math.floor(art.effect(Math.max(1,lvl))*100) + '%';
+            if (art.type === 'gold_boost') effectText = '金币获取+' + Math.floor(art.effect(Math.max(1,lvl))*100) + '%';
+            if (art.type === 'luck_boost') effectText = '幸运+' + art.effect(Math.max(1,lvl));
+            if (art.type === 'potion_boost') effectText = '药品效果+' + Math.floor(art.effect(Math.max(1,lvl))*100) + '%';
+            if (art.type === 'battle_shield') effectText = '战斗开始获得' + Math.floor(art.effect(Math.max(1,lvl))*100) + '%HP护盾';
+            if (art.type === 'death_recovery') effectText = '战败额外恢复' + Math.floor(art.effect(Math.max(1,lvl))*100) + '%HP';
+            d.innerHTML = '<div class="info"><div class="name" style="' + (isLearned ? 'color:var(--gold-accent);' : '') + '">' + art.name + (lvl > 0 ? ' <span style="font-size:0.85em;">Lv.' + lvl + '/' + art.maxLevel + '</span>' : '') + '</div><div class="desc">' + art.desc + (lvl > 0 ? ' → 当前：' + effectText : '') + '</div></div>';
+            if (unlocked && !selectedArt && !isLearned) {
+                var btn = document.createElement('span');
+                btn.className = 'action';
+                btn.textContent = '领悟';
+                btn.style.cursor = 'pointer';
+                btn.onclick = (function(aid){return function(){core.learnArt(aid); renderArtsModal(body);};})(art.id);
+                d.appendChild(btn);
+            }
+            if (isLearned && lvl < art.maxLevel) {
+                var goldCost = ART_UPGRADE_COST.gold(lvl);
+                var enCost = ART_UPGRADE_COST.enlightenment(lvl);
+                var upBtn = document.createElement('span');
+                upBtn.className = 'action';
+                upBtn.textContent = '升级(' + goldCost + '金+' + enCost + '悟)';
+                upBtn.style.cssText = 'cursor:pointer;font-size:0.85em;color:var(--warning);';
+                upBtn.onclick = (function(aid){return function(){core.upgradeArt(aid); renderArtsModal(body);};})(art.id);
+                d.appendChild(upBtn);
+            }
+            if (isLearned) {
+                var maxLbl = document.createElement('span');
+                maxLbl.style.cssText = 'font-size:0.8em;color:var(--gold-accent);margin-left:8px;';
+                maxLbl.textContent = lvl >= art.maxLevel ? '已满级' : '';
+                d.appendChild(maxLbl);
+            }
+            schoolDiv.appendChild(d);
+        });
+        // 遗忘按钮
+        if (selectedArt) {
+            var forgetBtn = document.createElement('button');
+            forgetBtn.style.cssText = 'margin-top:8px;padding:6px 14px;background:#fff;border:1px solid var(--danger);color:var(--danger);border-radius:4px;cursor:pointer;font-size:0.85em;';
+            forgetBtn.innerHTML = '<i class="fas fa-undo"></i> 遗忘（消耗5宝石）';
+            forgetBtn.onclick = (function(sid){return function(){if(confirm('确定遗忘？将消耗5宝石，该神功等级重置！')){core.forgetArt(sid); renderArtsModal(body);}};})(school.id);
+            schoolDiv.appendChild(forgetBtn);
+        }
+        body.appendChild(schoolDiv);
+    });
+}
+function renderSkillsModal(body) {
+    body.innerHTML = '<h3 style="font-family:\'Ma Shan Zheng\',cursive;font-size:1.5em;margin-bottom:15px;">神通广大</h3>';
+    SKILLS.forEach(function(sk) {
+        var lvl = gameState.skills[sk.id] || 0; var discount = Math.max(0.7, 1 - gameState.comprehension * 0.03); var cost = Math.floor(sk.cost(lvl + 1) * discount);
+        var canBuy = lvl < sk.maxLevel && gameState.gold >= cost; var d = document.createElement('div'); d.className = 'panel-list-item';
+        var extra = ''; if (sk.type === 'attack') extra = '｜伤害倍率: x' + sk.effect(lvl || 1).toFixed(1); if (sk.type === 'heal') extra = '｜回复: ' + sk.effect(lvl || 1); if (sk.type === 'cultivation') extra = '｜倍率: x' + sk.effect(lvl || 1).toFixed(2); if (sk.energyCost) extra += '｜消耗: ' + sk.energyCost + '能量';
+        d.innerHTML = '<div class="icon"><i class="fas fa-' + (sk.id === 'fireball' ? 'fire' : sk.id === 'heal' ? 'heart' : sk.id === 'meditation' ? 'leaf' : sk.id === 'strength' ? 'dumbbell' : sk.id === 'shield' ? 'shield-alt' : 'star') + '"></i></div><div class="info"><div class="name">' + sk.name + ' <span style="color:var(--gold-accent);">Lv.' + lvl + '/' + sk.maxLevel + '</span></div><div class="desc">' + sk.desc + extra + '｜费用: ' + cost + ' 金币</div></div><div class="action" style="' + (canBuy ? '' : 'opacity:0.4;') + '">' + (lvl >= sk.maxLevel ? '已满级' : '升级') + '</div>';
+        d.onclick = function() { core.upgradeSkill(sk.id); renderSkillsModal(body); }; body.appendChild(d);
+    });
+}
+function renderEquipModal(body) {
+    body.innerHTML = '<h3 style="font-family:\'Ma Shan Zheng\',cursive;font-size:1.5em;margin-bottom:15px;">法器装备</h3>';
+    var slotsDiv = document.createElement('div'); slotsDiv.className = 'equip-slots';
+    var slotNames = {weapon:'武器',armor:'护甲',acc1:'饰品一',acc2:'饰品二'};
+    ['weapon','armor','acc1','acc2'].forEach(function(slot) {
+        var uid = gameState.equipment[slot]; var inst = uid ? core.findEquipInBag(uid) : null;
+        var d = document.createElement('div'); d.className = 'equip-slot' + (inst ? ' filled border-quality-' + inst.quality : '');
+        if (inst) {
+            d.innerHTML = '<div class="slot-label">' + slotNames[slot] + '</div><div class="slot-item quality-' + inst.quality + '">' + (EQUIP_ICONS[inst.slot] || '') + ' ' + inst.name + (inst.enhanceLevel > 0 ? ' +' + inst.enhanceLevel : '') + '</div><div style="font-size:0.75em;color:#666;">ATK+' + Math.floor(inst.atk * (1 + inst.enhanceLevel * 0.1)) + ' DEF+' + Math.floor(inst.def * (1 + inst.enhanceLevel * 0.1)) + '</div>';
+            d.onclick = (function(s){return function(){core.unequipSlot(s); renderEquipModal(body);};})(slot);
+        } else { d.innerHTML = '<div class="slot-label">' + slotNames[slot] + '</div><div style="color:#887766;">空</div>'; }
+        slotsDiv.appendChild(d);
+    });
+    body.appendChild(slotsDiv);
+    var bagTitle = document.createElement('div'); bagTitle.style.cssText = 'margin-top:15px;font-family:\'Ma Shan Zheng\',cursive;font-size:1.2em;border-bottom:1px solid #ccc;padding-bottom:5px;'; bagTitle.textContent = '装备背包 (' + gameState.equipBag.length + '件)'; body.appendChild(bagTitle);
+    var bagDiv = document.createElement('div'); bagDiv.style.marginTop = '8px';
+    if (gameState.equipBag.length === 0) { bagDiv.innerHTML = '<p style="color:#999;text-align:center;padding:15px;">背包为空</p>'; }
+    gameState.equipBag.forEach(function(inst) {
+        var isEquipped = false; ['weapon','armor','acc1','acc2'].forEach(function(s){if(gameState.equipment[s]===inst.uid)isEquipped=true;});
+        var d = document.createElement('div'); d.className = 'panel-list-item';
+        d.style.borderLeft = '3px solid ' + (QUALITY_COLORS[inst.quality]||'#999');
+        if (isEquipped) d.style.background = 'rgba(212,175,55,0.22)';
+        var qName = {common:'白',uncommon:'绿',rare:'蓝',epic:'紫',legendary:'橙'};
+        var mult = 1 + inst.enhanceLevel * 0.1;
+        d.innerHTML = '<div class="icon">' + (EQUIP_ICONS[inst.slot] || '') + '</div><div class="info"><div class="name quality-' + inst.quality + '">' + inst.name + (inst.enhanceLevel > 0 ? ' +' + inst.enhanceLevel : '') + ' <span style="font-size:0.8em;">[' + qName[inst.quality] + ']' + (isEquipped ? ' [已装备]' : '') + '</span></div><div class="desc">ATK+' + Math.floor(inst.atk*mult) + ' DEF+' + Math.floor(inst.def*mult) + ' HP+' + Math.floor(inst.hp*mult) + ' SPD+' + Math.floor(inst.spd*mult) + ' LUK+' + Math.floor(inst.luck*mult) + '</div></div>';
+        var actDiv = document.createElement('div'); actDiv.style.display = 'flex'; actDiv.style.gap = '4px'; actDiv.style.flexShrink = '0';
+        if (!isEquipped) { var eqBtn = document.createElement('span'); eqBtn.className = 'action'; eqBtn.textContent = '装备'; eqBtn.style.cursor = 'pointer'; eqBtn.onclick = (function(u){return function(){core.equipItem(u); renderEquipModal(body);};})(inst.uid); actDiv.appendChild(eqBtn); }
+        var enhBtn = document.createElement('span'); enhBtn.style.cssText = 'color:var(--warning);font-size:0.85em;cursor:pointer;margin-left:6px;'; enhBtn.textContent = '强化'; enhBtn.onclick = (function(u){return function(){showEnhanceModal(u);};})(inst.uid); actDiv.appendChild(enhBtn);
+        var sellBtn = document.createElement('span'); sellBtn.style.cssText = 'color:var(--danger);font-size:0.85em;cursor:pointer;margin-left:6px;'; sellBtn.textContent = '出售'; sellBtn.onclick = (function(u){return function(){if(confirm('确定出售？')){core.sellEquip(u); renderEquipModal(body);}};})(inst.uid); actDiv.appendChild(sellBtn);
+        d.appendChild(actDiv); bagDiv.appendChild(d);
+    });
+    body.appendChild(bagDiv);
+}
+function showEnhanceModal(uid) {
+    var inst = core.findEquipInBag(uid); if (!inst) return;
+    var ov = document.getElementById('modal-overlay'); var body = document.getElementById('modal-body'); ov.style.display = 'flex';
+    var lv = inst.enhanceLevel; var cost = Math.floor((lv + 1) * 200 * Math.pow(1.5, lv));
+    var rate = Math.max(0.2, CONFIG.ENHANCE_BASE_RATE - lv * 0.05); var gemCost = CONFIG.ENHANCE_GEM_GUARANTEE;
+    body.innerHTML = '<h3 style="font-family:\'Ma Shan Zheng\',cursive;font-size:1.5em;margin-bottom:15px;">装备强化</h3>';
+    body.innerHTML += '<div class="panel-list-item"><div class="icon">' + (EQUIP_ICONS[inst.slot] || '') + '</div><div class="info"><div class="name quality-' + inst.quality + '">' + inst.name + ' +' + lv + '</div><div class="desc">下一级: +' + (lv+1) + ' (属性+10%)</div></div></div>';
+    body.innerHTML += '<div style="margin:10px 0;padding:10px;background:rgba(74,55,40,0.15);border-radius:5px;font-size:0.9em;"><div>强化费用：<i class="fas fa-coins"></i> ' + cost + '</div><div>成功率：' + Math.floor(rate*100) + '%</div><div>宝石保底：<i class="fas fa-gem"></i> ' + gemCost + ' (100%成功)</div></div>';
+    var btnRow = document.createElement('div'); btnRow.style.display = 'flex'; btnRow.style.gap = '10px';
+    var normalBtn = document.createElement('button'); normalBtn.className = 'btn-small'; normalBtn.style.flex = '1'; normalBtn.innerHTML = '<i class="fas fa-coins"></i> 普通强化'; normalBtn.onclick = function(){core.enhanceEquip(uid); showEnhanceModal(uid);};
+    var gemBtn = document.createElement('button'); gemBtn.className = 'btn-small'; gemBtn.style.flex = '1'; gemBtn.innerHTML = '<i class="fas fa-gem"></i> 宝石保底'; gemBtn.onclick = function(){core.enhanceEquipGem(uid); showEnhanceModal(uid);};
+    btnRow.appendChild(normalBtn); btnRow.appendChild(gemBtn); body.appendChild(btnRow);
+}
+function renderInventoryModal(body) {
+    body.innerHTML = '<h3 style="font-family:\'Ma Shan Zheng\',cursive;font-size:1.5em;margin-bottom:15px;">玲珑宝库</h3>';
+    var entries = Object.entries(gameState.inventory);
+    var buffInfo = '';
+    if (gameState.buffRage > 0) buffInfo += '<div style="padding:6px 10px;background:rgba(231,76,60,0.15);border-radius:4px;margin-bottom:8px;font-size:0.9em;"><i class="fas fa-fire" style="color:#e74c3c;"></i> 狂暴丹：剩余' + gameState.buffRage + '场战斗</div>';
+    if (gameState.buffFocus > 0) buffInfo += '<div style="padding:6px 10px;background:rgba(52,152,219,0.15);border-radius:4px;margin-bottom:8px;font-size:0.9em;"><i class="fas fa-star" style="color:#3498db;"></i> 聚灵符：剩余' + gameState.buffFocus + '次修炼</div>';
+    if (buffInfo) body.innerHTML += buffInfo;
+    if (entries.length === 0) { body.innerHTML += '<p style="color:#999;text-align:center;padding:20px;">宝库为空</p>'; return; }
+    entries.forEach(function(entry) {
+        var id = entry[0], qty = entry[1]; var it = CONSUMABLES.filter(function(c){return c.id === id;})[0]; if (!it) return;
+        var d = document.createElement('div'); d.className = 'panel-list-item';
+        d.innerHTML = '<div class="icon"><i class="fas fa-' + (id.includes('hp') ? 'flask' : id.includes('energy') ? 'bolt' : id.includes('exp') ? 'scroll' : id.includes('rage') ? 'fire' : id.includes('focus') ? 'star' : 'gem') + '"></i></div><div class="info"><div class="name">' + it.name + '</div><div class="desc">' + it.desc + '</div></div><div class="action">x' + qty + '｜使用</div>';
+        d.onclick = function(){core.useItem(id); renderInventoryModal(body);}; body.appendChild(d);
+    });
+}
+function renderRoadmapModal(body) {
+    body.innerHTML = '<h3 style="font-family:\'Ma Shan Zheng\',cursive;font-size:1.5em;margin-bottom:5px;">仙途指引</h3><div style="font-size:0.8em;color:#888;margin-bottom:15px;">当前等级：' + gameState.level + ' ｜ 当前境界：' + gameState.realm + '</div>';
+    var milestones = [];
+    REALMS.forEach(function(r){milestones.push({level:r.level,type:'realm',name:r.name,color:r.color});});
+    ENEMIES.filter(function(e){return !e.isBoss;}).forEach(function(e,i){milestones.push({level:(i+1)*CONFIG.ENEMY_UNLOCK_STEP,type:'enemy',name:e.name});});
+    var bosses = ENEMIES.filter(function(e){return e.isBoss;}); var bossLevels = [25,45,70];
+    bosses.forEach(function(e,i){if(i<bossLevels.length)milestones.push({level:bossLevels[i],type:'boss',name:e.name});});
+    milestones.sort(function(a,b){return a.level-b.level||a.type.localeCompare(b.type);});
+    milestones.forEach(function(m){
+        var unlocked = gameState.level >= m.level;
+        var d = document.createElement('div');
+        if (m.type === 'realm') {
+            d.style.cssText = 'padding:14px 16px;margin-bottom:10px;border-radius:6px;background:' + (unlocked ? 'rgba(212,175,55,0.1)' : 'rgba(74,55,40,0.06)') + ';border-left:4px solid ' + (m.color||'var(--gold-accent)') + ';';
+            var typeLabel = '境界突破';
+            var levelTag = unlocked ? '<span style="color:var(--jade-green);font-size:0.9em;">✓ 已解锁</span>' : '<span style="color:#999;font-size:0.85em;"><i class="fas fa-lock" style="font-size:0.8em;"></i> Lv.' + m.level + ' 解锁</span>';
+            d.innerHTML = '<div style="display:flex;align-items:center;gap:10px;"><div style="font-size:1.6em;">' + m.name + '</div><div style="font-size:0.85em;color:' + (m.color||'#333') + ';">' + typeLabel + '</div></div><div style="margin-top:4px;">' + levelTag + '</div>';
+        } else {
+            d.className = 'panel-list-item';
+            d.style.cssText = 'padding:6px 10px;font-size:0.85em;opacity:' + (unlocked?'1':'0.45') + ';border:1px solid ' + (unlocked?(m.type==='boss'?'var(--vermilion)':'rgba(74,55,40,0.2)'):'transparent') + ';';
+            var typeLabel = m.type==='boss'?'Boss遭遇':'历练遭遇';
+            var levelTag = unlocked?'<span style="color:var(--jade-green);font-size:0.8em;">✓</span>':'<span style="color:#999;font-size:0.8em;">Lv.'+m.level+'</span>';
+            d.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;"><span><i class="fas fa-' + (m.type==='boss'?'skull':'paw') + '" style="margin-right:4px;font-size:0.9em;"></i>' + m.name + '</span>' + levelTag + '</div>';
+        }
+        body.appendChild(d);
+    });
+}
+function renderAchievementsModal(body) {
+    body.innerHTML = '<h3 style="font-family:\'Ma Shan Zheng\',cursive;font-size:1.5em;margin-bottom:15px;">功德碑</h3>';
+    ACHIEVEMENTS.forEach(function(a) {
+        var unlocked = gameState.achievements.includes(a.id); var d = document.createElement('div'); d.className = 'panel-list-item';
+        d.style.opacity = unlocked ? '1' : '0.45'; d.style.border = unlocked ? '1px solid var(--gold-accent)' : '1px solid transparent';
+        var rt = ''; if (a.reward.gold) rt += a.reward.gold + '金币 '; if (a.reward.gem) rt += a.reward.gem + '宝石';
+        d.innerHTML = '<div class="icon"><i class="fas fa-' + (a.id.includes('level')?'award':a.id.includes('battle')||a.id.includes('boss')?'trophy':a.id.includes('gold')?'coins':a.id.includes('equip')?'hammer':a.id.includes('enhance')?'arrow-up':'seedling') + '"></i></div><div class="info"><div class="name">' + a.name + '</div><div class="desc">' + a.desc + (rt ? ' ｜奖励: ' + rt : '') + '</div></div><div class="action">' + (unlocked ? '<span style="color:var(--gold-accent);">已解锁</span>' : '未解锁') + '</div>';
+        body.appendChild(d);
+    });
+}
+function renderShopModal(body) {
+    body.innerHTML = '<h3 style="font-family:\'Ma Shan Zheng\',cursive;font-size:1.5em;margin-bottom:15px;">灵坊市集</h3>';
+    body.innerHTML += '<div style="font-size:0.9em;color:#666;margin-bottom:8px;">消耗品</div>';
+    var grid = document.createElement('div'); grid.className = 'shop-grid';
+    CONSUMABLES.forEach(function(si) {
+        var canBuy = si.currency==='gold' ? gameState.gold>=si.price : gameState.gem>=si.price;
+        var d = document.createElement('div'); d.className = 'shop-item';
+        d.innerHTML = '<div class="item-icon"><i class="fas fa-' + (si.id.includes('hp')?'flask':si.id.includes('energy')?'bolt':si.id.includes('exp')?'scroll':si.id.includes('rage')?'fire':si.id.includes('focus')?'star':'gem') + '"></i></div><div style="font-weight:bold;margin-bottom:4px;">' + si.name + '</div><div class="price"><i class="fas fa-' + (si.currency==='gold'?'coins':'gem') + '"></i> ' + si.price + '</div>';
+        d.style.opacity = canBuy ? '1' : '0.5'; d.onclick = function(){core.buyItem(si.id); renderShopModal(body);}; grid.appendChild(d);
+    });
+    body.appendChild(grid);
+    var eqTitle = document.createElement('div'); eqTitle.style.cssText = 'font-size:0.9em;color:#666;margin:15px 0 8px;'; eqTitle.textContent = '装备锻造（随机品质）'; body.appendChild(eqTitle);
+    var eqGrid = document.createElement('div'); eqGrid.className = 'shop-grid';
+    [{slot:'weapon',name:'锻造武器',price:3,currency:'gem'},{slot:'armor',name:'锻造护甲',price:3,currency:'gem'},{slot:'acc1',name:'锻造饰品',price:3,currency:'gem'}].forEach(function(item) {
+        var canBuy = gameState.gem >= item.price; var d = document.createElement('div'); d.className = 'shop-item';
+        d.innerHTML = '<div class="item-icon"><i class="fas fa-' + (item.slot==='weapon'?'hammer':item.slot==='armor'?'vest':'ring') + '" style="font-size:2.5em;"></i></div><div style="font-weight:bold;margin-bottom:4px;">' + item.name + '</div><div class="price"><i class="fas fa-gem"></i> ' + item.price + '</div>';
+        d.style.opacity = canBuy ? '1' : '0.5';
+        d.onclick = function() {
+            if (gameState.gem < item.price) { showToast('宝石不足', 'warning'); return; }
+            gameState.gem -= item.price;
+            var pool = EQUIP_BASES.filter(function(e){return e.slot === item.slot;});
+            if (pool.length === 0) { showToast('暂无可锻造的装备', 'warning'); return; }
+            var base = pool[Math.floor(Math.random() * pool.length)];
+            var inst = {uid:'eq_'+(gameState._equipUid++),baseId:base.id,name:base.name,slot:base.slot,quality:base.quality,
+                atk:Math.floor(base.baseAtk*(0.8+Math.random()*0.4)),def:Math.floor(base.baseDef*(0.8+Math.random()*0.4)),
+                hp:Math.floor(base.baseHp*(0.8+Math.random()*0.4)),spd:Math.floor(base.baseSpd*(0.8+Math.random()*0.4)),
+                luck:Math.floor(base.baseLuck*(0.8+Math.random()*0.4)),enhanceLevel:0};
+            if (inst.atk+inst.def+inst.hp+inst.spd+inst.luck===0) inst.atk=1;
+            gameState.equipBag.push(inst);
+            if (base.quality==='rare'||base.quality==='epic'||base.quality==='legendary') gameState.stats.equipRareFound++;
+            if (base.quality==='legendary') gameState.stats.equipLegendFound++;
+            showToast('锻造出 '+inst.name+'！','success'); renderShopModal(body);
+        };
+        eqGrid.appendChild(d);
+    });
+    body.appendChild(eqGrid);
+}
+/* ---- 每日任务+签到渲染 ---- */
+function renderDailyModal(body) {
+    core.initDailyTasks();
+    var dd = gameState.dailyData;
+    body.innerHTML = '<h3 style="font-family:\'Ma Shan Zheng\',cursive;font-size:1.5em;margin-bottom:10px;">每日修行</h3>';
+    /* 签到区域 */
+    var streak = dd.streak || 0;
+    var canCheckIn = !dd.checkInDone;
+    var checkInHtml = '<div style="background:rgba(74,55,40,0.08);border-radius:8px;padding:14px 16px;margin-bottom:15px;">';
+    checkInHtml += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="font-family:\'Ma Shan Zheng\',cursive;font-size:1.1em;">签到修行</span><span style="color:var(--gold-accent);font-size:0.9em;">连续' + streak + '天</span></div>';
+    checkInHtml += '<div style="display:flex;gap:4px;justify-content:center;margin-bottom:10px;">';
+    for (var d = 1; d <= 7; d++) {
+        var active = d <= streak;
+        var today = d === (streak % 7 || 7);
+        checkInHtml += '<div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75em;' +
+            'background:' + (active ? 'rgba(212,175,55,0.2)' : 'rgba(74,55,40,0.1)') + ';' +
+            'border:2px solid ' + (active ? 'var(--gold-accent)' : 'transparent') + ';color:' + (active ? 'var(--gold-accent)' : '#999') + ';">' + d + '</div>';
+    }
+    checkInHtml += '</div>';
+    var r = core.getCheckInReward(streak + 1);
+    var rewardText = (r.gold || 0) + '金币' + ((r.gem||0) > 0 ? ' +' + (r.gem||0) + '宝石' : '');
+    checkInHtml += '<button id="checkin-btn" style="width:100%;padding:8px;background:' + (canCheckIn ? 'var(--gold-accent)' : '#999') + ';color:#fff;border:none;border-radius:4px;cursor:' + (canCheckIn ? 'pointer' : 'not-allowed') + ';font-family:inherit;font-size:0.95em;">' + (canCheckIn ? '今日签到 +' + rewardText : '今日已签到') + '</button>';
+    checkInHtml += '</div>';
+    body.innerHTML += checkInHtml;
+    document.getElementById('checkin-btn').onclick = function(){
+        if (!core.doCheckIn) return;
+        var res = core.doCheckIn();
+        if (res.ok) { renderDailyModal(body); updateUI(); }
+        else showToast(res.msg, 'warning');
+    };
+    /* 每日任务列表 */
+    body.innerHTML += '<div style="font-family:\'Ma Shan Zheng\',cursive;font-size:1.1em;margin-bottom:8px;">每日任务</div>';
+    var claimable = core.checkDailyTasks();
+    GameCore.DAILY_TASKS.forEach(function(dt){
+        var progress = 0;
+        if (dt.statKey) { var key = {totalCultivations:'totalCultivationsDay',totalBattles:'totalBattlesDay',totalWins:'totalWinsDay'}[dt.statKey]; progress = gameState.stats[key] || 0; }
+        else if (dt.checkKey) { progress = dd[dt.checkKey] || 0; }
+        var pct = Math.min(100, Math.floor(progress / dt.target * 100));
+        var claimed = dd.tasks && dd.tasks[dt.id] && dd.tasks[dt.id].claimed;
+        var done = pct >= 100;
+        var d = document.createElement('div');
+        d.className = 'panel-list-item';
+        d.style.cssText = 'border-left:3px solid ' + (done && !claimed ? 'var(--success)' : 'transparent') + ';';
+        d.innerHTML = '<div style="flex:1;"><div style="font-weight:bold;font-size:0.95em;">' + dt.name + '</div>' +
+            '<div style="font-size:0.8em;color:#888;">' + dt.desc + '（' + Math.min(progress, dt.target) + '/' + dt.target + '）</div>' +
+            '<div style="height:4px;background:rgba(74,55,40,0.1);border-radius:2px;margin-top:4px;overflow:hidden;">' +
+            '<div style="height:100%;width:' + pct + '%;background:var(--success);border-radius:2px;transition:width 0.3s;"></div></div></div>' +
+            '<div style="align-self:center;margin-left:8px;">';
+        if (claimed) { d.querySelector('div:last-child').innerHTML = '<span style="color:var(--success);font-size:0.85em;">已领取</span>'; }
+        else if (done) {
+            var btn = document.createElement('button');
+            btn.textContent = '领取'; btn.style.cssText = 'padding:4px 10px;background:var(--gold-accent);color:#fff;border:none;border-radius:3px;cursor:pointer;font-family:inherit;font-size:0.85em;';
+            btn.onclick = (function(id){return function(){ var r = core.claimDailyTask(id); if(r.ok) { renderDailyModal(body); updateUI(); } else showToast(r.msg, 'warning'); };})(dt.id);
+            d.querySelector('div:last-child').appendChild(btn);
+        } else { d.querySelector('div:last-child').innerHTML = '<span style="color:#999;font-size:0.85em;">进行中</span>'; }
+        body.appendChild(d);
+    });
+    /* 红点更新 */
+    var dot = document.getElementById('daily-dot');
+    if (dot) dot.style.display = claimable.length > 0 ? 'block' : 'none';
+}
+function renderSettingsModal(body) {
+    body.innerHTML = '<h3 style="font-family:\'Ma Shan Zheng\',cursive;font-size:1.5em;margin-bottom:15px;">仙机设置</h3>';
+    [{id:'sound',name:'背景音乐',desc:'开启游戏BGM'},{id:'autoSave',name:'自动保存',desc:'每10秒自动保存'},{id:'animations',name:'动画效果',desc:'开启UI动画'}].forEach(function(s) {
+        var d = document.createElement('div'); d.className = 'panel-list-item';
+        d.innerHTML = '<div class="info"><div class="name">' + s.name + '</div><div class="desc">' + s.desc + '</div></div><div class="action"><input type="checkbox" ' + (gameState.settings[s.id]?'checked':'') + ' onchange="core.toggleSetting(\'' + s.id + '\')" style="width:18px;height:18px;cursor:pointer;"></div>';
+        body.appendChild(d);
+    });
+    var volWrap = document.createElement('div'); volWrap.className = 'panel-list-item'; volWrap.style.flexDirection = 'column'; volWrap.style.alignItems = 'stretch';
+    volWrap.innerHTML = '<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span class="name">音量</span><span id="vol-val" style="color:var(--gold-accent);">' + Math.round((gameState.settings.bgmVolume||0.5)*100) + '%</span></div><input type="range" min="0" max="100" value="' + Math.round((gameState.settings.bgmVolume||0.5)*100) + '" style="width:100%;accent-color:var(--gold-accent);" id="vol-slider">';
+    body.appendChild(volWrap);
+    var slider = volWrap.querySelector('#vol-slider'); var volVal = volWrap.querySelector('#vol-val');
+    slider.oninput = function(){var v = parseInt(this.value)/100; BGM.setVolume(v); volVal.textContent = this.value+'%'; gameState.settings.bgmVolume = v;};
+    /* 龙傲天模式（上线小程序前须删除本段 + game-core.js 中对应逻辑） */
+    var longaotianWrap = document.createElement('div'); longaotianWrap.className = 'panel-list-item';
+    longaotianWrap.style.marginTop = '10px'; longaotianWrap.style.borderTop = '2px solid var(--gold-accent)'; longaotianWrap.style.paddingTop = '10px';
+    var isLAT = gameState.settings.longaotian || false;
+    var btnText = isLAT ? '调整属性' : (isLAT===false?'已开启':'未开启');
+    var btnColor = isLAT ? 'var(--gold-accent)' : (gameState.settings.longaotian?'var(--success)':'var(--danger)');
+    longaotianWrap.innerHTML = '<div class="info"><div class="name">🐉 龙傲天模式</div></div>'
+        + '<div class="action"><button id="lat-toggle" class="btn-small" style="border-color:' + btnColor + ';color:' + btnColor + ';">' + btnText + '</button></div>';
+    body.appendChild(longaotianWrap);
+    document.getElementById('lat-toggle').onclick = function(){
+        if(gameState.settings.longaotian){
+            // 已开启：弹出属性调整面板
+            showLATPanel();
+        } else {
+            // 未开启：要求密码
+            var pwd=prompt('🔑 请输入密码开启龙傲天模式：','');
+            if(pwd==='oxonb'){
+                gameState._latBackup={atk:gameState.atk,def:gameState.def,maxHp:gameState.maxHp,critRate:gameState.critRate,dodgeRate:gameState.dodgeRate};
+                gameState.settings.longaotian=true;
+                gameState.atk=99999; gameState.def=99999; gameState.maxHp=999999; gameState.hp=999999;
+                gameState.critRate=100; gameState.dodgeRate=100;
+                showToast('龙傲天模式已开启！横扫一切！','system');
+                renderSettingsModal(body);
+            } else if(pwd!==null){showToast('密码错误！','warning');}
+        }
+    };
+    // 已开启时额外显示"关闭"按钮
+    if(isLAT){
+        var closeWrap = document.createElement('div');
+        closeWrap.style.marginTop='4px';
+        closeWrap.innerHTML='<button id="lat-close" class="btn-small" style="border-color:var(--danger);color:var(--danger);width:100%;">关闭龙傲天模式</button>';
+        body.appendChild(closeWrap);
+        document.getElementById('lat-close').onclick=function(){
+            gameState.settings.longaotian=false;
+            gameState.atk=gameState._latBackup?gameState._latBackup.atk:gameState.atk;
+            gameState.def=gameState._latBackup?gameState._latBackup.def:gameState.def;
+            gameState.maxHp=gameState._latBackup?gameState._latBackup.maxHp:gameState.maxHp;
+            gameState.hp=gameState.maxHp;
+            gameState.critRate=gameState._latBackup?gameState._latBackup.critRate:gameState.critRate;
+            gameState.dodgeRate=gameState._latBackup?gameState._latBackup.dodgeRate:gameState.dodgeRate;
+            showToast('龙傲天模式已关闭','system');
+            renderSettingsModal(body);
+        };
+    }
+    var saveBtn = document.createElement('button'); saveBtn.className = 'btn-small'; saveBtn.innerHTML = '<i class="fas fa-save"></i> 手动保存'; saveBtn.onclick = function(){core.saveGame();}; body.appendChild(saveBtn);
+    var resetBtn = document.createElement('button'); resetBtn.className = 'btn-small'; resetBtn.innerHTML = '<i class="fas fa-trash-alt"></i> 重置游戏'; resetBtn.style.borderColor = 'var(--danger)'; resetBtn.style.color = 'var(--danger)';
+    resetBtn.onclick = function(){if(confirm('确定重置？此操作不可撤销！')){localStorage.removeItem(CONFIG.SAVE_KEY);location.reload();}}; body.appendChild(resetBtn);
+}
+function showAssignModal() {
+    var ov = document.getElementById('modal-overlay'); var body = document.getElementById('modal-body'); ov.style.display = 'flex';
+    body.innerHTML = '<h3 style="font-family:\'Ma Shan Zheng\',cursive;font-size:1.5em;margin-bottom:15px;">分配属性点</h3>';
+    body.innerHTML += '<p>可分配点数：<strong style="color:var(--vermilion);">' + gameState.freePoints + '</strong></p>';
+    [{id:'hp',name:'生命',desc:'每点+20生命'},{id:'atk',name:'攻击',desc:'每点+2攻击'},{id:'def',name:'防御',desc:'每点+1防御(百分比减伤)'},{id:'spd',name:'速度',desc:'每点+1速度(逃跑率)'},{id:'luck',name:'幸运',desc:'每点+1幸运(暴击+2%,掉落)'},{id:'comp',name:'悟性',desc:'每点+1悟性(经验+5%,技能-3%)'}].forEach(function(s) {
+        var d = document.createElement('div'); d.className = 'panel-list-item';
+        d.innerHTML = '<div class="info"><div class="name">' + s.name + '</div><div class="desc">' + s.desc + '</div></div><div class="action" style="' + (gameState.freePoints>0?'color:var(--gold-accent);':'opacity:0.4;') + '">升级</div>';
+        d.onclick = function(){core.assignStat(s.id); showAssignModal();}; body.appendChild(d);
+    });
+}
+
+/* ========== 开发者面板（罩门彩蛋） ========== */
+var devClicks = 0, devClickTimer = null;
+(function(){
+    var realmBadge = document.getElementById('realm');
+    if(!realmBadge) return;
+    var origOnclick = realmBadge.onclick;
+    realmBadge.onclick = function(e){
+        if(origOnclick) origOnclick.call(this,e);
+        devClicks++;
+        clearTimeout(devClickTimer);
+        devClickTimer = setTimeout(function(){devClicks=0;}, 2000);
+        if(devClicks >= 5){devClicks=0;showDevPasswordPrompt();}
+    };
+})();
+function showDevPasswordPrompt(){
+    var pwd = prompt('🔒 请输入罩门密码：','');
+    if(pwd==='oxo2026'){showDevPanel();showToast('开发者模式已开启','system');}
+    else if(pwd!==null){showToast('密码错误！','warning');}
+}
+function showDevPanel(){
+    var ov = document.getElementById('modal-overlay'); var body = document.getElementById('modal-body');
+    ov.style.display='flex';
+    body.innerHTML='<h3 style="font-family:\'Ma Shan Zheng\',cursive;font-size:1.5em;margin-bottom:10px;">🛠 开发者面板</h3>'
+        +'<p style="font-size:0.8em;color:#888;margin-bottom:15px;">随意调整数值，改完记得点"应用"</p>'
+        +'<div id="dev-content"></div>'
+        +'<div style="display:flex;gap:8px;margin-top:15px;">'
+        +'<button id="dev-apply" class="btn-small" style="background:var(--success);color:#fff;border:none;">应用修改</button>'
+        +'<button id="dev-refresh" class="btn-small">刷新面板</button>'
+        +'<button id="dev-close" class="btn-small" style="border-color:var(--danger);color:var(--danger);">关闭</button>'
+        +'</div>';
+    renderDevContent();
+    document.getElementById('dev-apply').onclick=applyDevChanges;
+    document.getElementById('dev-refresh').onclick=function(){renderDevContent();showToast('已刷新','system');};
+    document.getElementById('dev-close').onclick=function(){ov.style.display='none';};
+}
+var devInputs={};
+function renderDevContent(){
+    var c=document.getElementById('dev-content');
+    devInputs={};
+    var fields=[
+        {key:'level',label:'等级',val:gameState.level,type:'number'},
+        {key:'exp',label:'经验',val:Math.floor(gameState.exp),type:'number'},
+        {key:'gold',label:'金币',val:gameState.gold,type:'number'},
+        {key:'gem',label:'宝石',val:gameState.gem,type:'number'},
+        {key:'hp',label:'当前生命',val:gameState.hp,type:'number'},
+        {key:'maxHp',label:'最大生命',val:gameState.maxHp,type:'number'},
+        {key:'atk',label:'攻击',val:gameState.atk,type:'number'},
+        {key:'def',label:'防御',val:gameState.def,type:'number'},
+        {key:'spd',label:'速度',val:gameState.spd,type:'number'},
+        {key:'luck',label:'幸运',val:gameState.luck,type:'number'},
+        {key:'comp',label:'悟性',val:gameState.comp,type:'number'},
+        {key:'energy',label:'体力',val:gameState.energy,type:'number'},
+        {key:'freePoints',label:'未分配点数',val:gameState.freePoints,type:'number'},
+    ];
+    var html='';
+    fields.forEach(function(f){
+        var id='dev_'+f.key;
+        html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(74,55,40,0.1);">'
+            +'<span style="font-size:0.9em;">'+f.label+'</span>'
+            +'<input id="'+id+'" type="'+f.type+'" value="'+f.val+'" style="width:100px;padding:4px 8px;border:1px solid var(--gold-accent);border-radius:3px;background:rgba(255,248,240,0.8);font-family:inherit;font-size:0.9em;">'
+            +'</div>';
+        devInputs[f.key]=id;
+    });
+    /* 快捷操作 */
+    html+='<div style="margin-top:12px;padding-top:10px;border-top:2px solid var(--gold-accent);">'
+        +'<div style="font-size:0.85em;color:var(--gold-accent);margin-bottom:8px;">快捷操作</div>'
+        +'<div id="dev-actions"></div></div>';
+    c.innerHTML=html;
+    /* 快捷操作按钮 - DOM 操作后绑定 */
+    var actionsDiv=document.getElementById('dev-actions');
+    var actions=[
+        {label:'满血复活',fn:function(){gameState.hp=gameState.maxHp;updateUI();showToast('已满血','system');}},
+        {label:'体力回满',fn:function(){gameState.energy=(CONFIG.MAX_ENERGY||50);updateUI();showToast('体力回满','system');}},
+        {label:'完成所有每日任务',fn:function(){if(!gameState.dailyData)gameState.dailyData={tasks:{}};GameCore.DAILY_TASKS.forEach(function(dt){if(!gameState.dailyData.tasks)gameState.dailyData.tasks={};gameState.dailyData.tasks[dt.id]={claimed:true};});updateUI();showToast('每日任务已全完成','system');}},
+        {label:'签到7天奖励',fn:function(){if(!gameState.dailyData)gameState.dailyData={};gameState.dailyData.streak=6;var r=core.getCheckInReward(7);if(r.gold)core.gainGold(r.gold);if(r.gem)gameState.gem+=r.gem;showToast('已领第7天奖励','system');}},
+        {label:'清空战斗日志',fn:function(){document.getElementById('battle-log').innerHTML='';showToast('日志已清空','system');}},
+        {label:'跳到下一个境界',fn:function(){var idx=REALMS.findIndex(function(r){return r.name===gameState.realm;});if(idx<REALMS.length-1){gameState.level=REALMS[idx+1].level;core.checkRealmBreak();updateUI();showToast('已突破至'+gameState.realm,'system');}}},
+    ];
+    actions.forEach(function(a){
+        var btn=document.createElement('button');
+        btn.className='btn-small';
+        btn.style.cssText='margin:2px 4px 2px 0;font-size:0.8em;padding:3px 8px;';
+        btn.textContent=a.label;
+        btn.onclick=a.fn;
+        actionsDiv.appendChild(btn);
+    });
+}
+function applyDevChanges(){
+    try{
+        Object.keys(devInputs).forEach(function(key){
+            var el=document.getElementById(devInputs[key]);
+            if(!el)return;
+            var val=parseFloat(el.value);
+            if(isNaN(val))return;
+            if(key==='exp')gameState.exp=val;
+            else if(key==='hp')gameState.hp=Math.max(0,Math.min(val,gameState.maxHp));
+            else if(key==='maxHp'){gameState.maxHp=val;gameState.hp=Math.min(gameState.hp,val);}
+            else gameState[key]=val;
+        });
+        core.checkRealmBreak();
+        updateUI();
+        showToast('修改已应用！','system');
+    }catch(e){showToast('应用失败：'+e.message,'error');}
+}
+/* ========== 龙傲天属性面板 ========== */
+var latInputs={};
+function showLATPanel(){
+    var ov=document.getElementById('modal-overlay'); var body=document.getElementById('modal-body');
+    ov.style.display='flex';
+    body.innerHTML='<h3 style="font-family:\'Ma Shan Zheng\',cursive;font-size:1.5em;margin-bottom:10px;">🐉 龙傲天属性</h3>'
+        +'<p style="font-size:0.8em;color:#888;margin-bottom:15px;">自由调整所有数值</p>'
+        +'<div id="lat-content"></div>'
+        +'<div style="display:flex;gap:8px;margin-top:15px;">'
+        +'<button id="lat-apply" class="btn-small" style="background:var(--success);color:#fff;border:none;">应用修改</button>'
+        +'<button id="lat-reset" class="btn-small">恢复备份数值</button>'
+        +'<button id="lat-close" class="btn-small" style="border-color:var(--danger);color:var(--danger);">关闭</button>'
+        +'</div>';
+    renderLATContent();
+    document.getElementById('lat-apply').onclick=applyLATChanges;
+    document.getElementById('lat-reset').onclick=function(){
+        if(!gameState._latBackup){showToast('无备份数据','warning');return;}
+        gameState.atk=gameState._latBackup.atk;
+        gameState.def=gameState._latBackup.def;
+        gameState.maxHp=gameState._latBackup.maxHp;
+        gameState.hp=gameState._latBackup.maxHp;
+        gameState.critRate=gameState._latBackup.critRate;
+        gameState.dodgeRate=gameState._latBackup.dodgeRate;
+        updateUI(); renderLATContent();
+        showToast('已恢复备份数值','system');
+    };
+    document.getElementById('lat-close').onclick=function(){ov.style.display='none';};
+}
+function renderLATContent(){
+    var c=document.getElementById('lat-content');
+    latInputs={};
+    var fields=[
+        {key:'level',label:'等级',val:gameState.level},
+        {key:'exp',label:'经验',val:Math.floor(gameState.exp)},
+        {key:'gold',label:'金币',val:gameState.gold},
+        {key:'gem',label:'宝石',val:gameState.gem},
+        {key:'hp',label:'当前生命',val:gameState.hp},
+        {key:'maxHp',label:'最大生命',val:gameState.maxHp},
+        {key:'atk',label:'攻击',val:gameState.atk},
+        {key:'def',label:'防御',val:gameState.def},
+        {key:'spd',label:'速度',val:gameState.spd},
+        {key:'luck',label:'幸运',val:gameState.luck},
+        {key:'comp',label:'悟性',val:gameState.comp},
+        {key:'energy',label:'体力',val:gameState.energy},
+        {key:'freePoints',label:'未分配点数',val:gameState.freePoints},
+        {key:'critRate',label:'暴击率(%)',val:gameState.critRate},
+        {key:'dodgeRate',label:'闪避率(%)',val:gameState.dodgeRate},
+        {key:'enlightenment',label:'悟性点',val:gameState.enlightenment},
+    ];
+    var html='';
+    fields.forEach(function(f){
+        var id='lat_'+f.key;
+        html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(74,55,40,0.08);">'
+            +'<span style="font-size:0.85em;">'+f.label+'</span>'
+            +'<input id="'+id+'" type="number" value="'+f.val+'" style="width:100px;padding:3px 6px;border:1px solid var(--gold-accent);border-radius:3px;background:rgba(255,248,240,0.8);font-family:inherit;font-size:0.85em;">'
+            +'</div>';
+        latInputs[f.key]=id;
+    });
+    c.innerHTML=html;
+}
+function applyLATChanges(){
+    try{
+        Object.keys(latInputs).forEach(function(key){
+            var el=document.getElementById(latInputs[key]);
+            if(!el)return;
+            var val=parseFloat(el.value);
+            if(isNaN(val))return;
+            if(key==='exp')gameState.exp=val;
+            else if(key==='hp')gameState.hp=Math.max(0,Math.min(val,gameState.maxHp));
+            else if(key==='maxHp'){gameState.maxHp=val;gameState.hp=Math.min(gameState.hp,val);}
+            else if(key==='critRate')gameState.critRate=Math.max(0,Math.min(100,val));
+            else if(key==='dodgeRate')gameState.dodgeRate=Math.max(0,Math.min(100,val));
+            else gameState[key]=val;
+        });
+        core.checkRealmBreak();
+        updateUI();
+        showToast('属性已修改！','system');
+    }catch(e){showToast('应用失败：'+e.message,'error');}
+}
+/* ---- 工具函数 ---- */
+function showToast(msg, type) { var c = document.getElementById('toast-container'); var t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; if (type === 'error') t.style.borderColor = 'var(--danger)'; if (type === 'warning') t.style.borderColor = 'var(--warning)'; c.appendChild(t); setTimeout(function(){t.remove();}, 3000); }
+function showFloatingText(text, color) { if (!gameState.settings.animations) return; var el = document.createElement('div'); el.className = 'floating-text'; el.textContent = text; el.style.color = color; el.style.left = '50%'; el.style.top = '50%'; el.style.transform = 'translate(-50%,-50%)'; document.querySelector('.avatar-frame').appendChild(el); setTimeout(function(){el.remove();}, 1000); }
+function showLevelUpAnim() { if (!gameState.settings.animations) return; var av = document.querySelector('.avatar-frame'); av.style.transform = 'scale(1.1)'; av.style.transition = 'transform 0.3s'; setTimeout(function(){av.style.transform = 'scale(1)';}, 300); }
+function showRealmBreakAnim(realmName) { var overlay = document.getElementById('realm-break-overlay'); document.getElementById('realm-break-text').textContent = '突破 · ' + realmName; document.getElementById('realm-break-sub').textContent = '仙途漫漫，道阻且长'; overlay.classList.add('active'); setTimeout(function(){overlay.classList.remove('active');}, 2500); }
+function addBattleLog(msg, cls) { var log = document.getElementById('battle-log'); var m = document.createElement('div'); m.className = 'battle-msg ' + (cls || ''); m.textContent = msg; log.appendChild(m); log.scrollTop = log.scrollHeight; while (log.children.length > 25) log.removeChild(log.firstChild); }
+function showDmgPopup(dmg, crit) { if (!gameState.settings.animations) return; var el = document.createElement('div'); el.className = 'dmg-popup'; el.textContent = (crit?'暴击! ':'-')+dmg; el.style.color = crit?'var(--vermilion)':'var(--jade-green)'; el.style.fontSize = crit?'1.4em':'1.1em'; var card = document.getElementById('enemy-card'); card.style.position = 'relative'; el.style.right = '10px'; el.style.top = '0'; card.appendChild(el); setTimeout(function(){el.remove();}, 800); }
+function shakeEnemy() { if (!gameState.settings.animations) return; var card = document.getElementById('enemy-card'); card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); }
+/* ---- 战斗爽点函数 ---- */
+function showPlayerDmgPopup(dmg, crit) { if (!gameState.settings.animations) return;
+    var el = document.createElement('div'); el.className = 'player-dmg-popup';
+    el.textContent = (crit?'暴击! ':'-') + dmg; el.style.color = crit?'var(--vermilion)':'#c0392b';
+    el.style.fontSize = crit?'1.5em':'1.1em';
+    var avatar = document.querySelector('.avatar-frame'); avatar.style.position = 'relative';
+    el.style.left = '50%'; el.style.top = '60%'; el.style.transform = 'translate(-50%,0)';
+    avatar.appendChild(el); setTimeout(function(){el.remove();}, 800);
+}
+function showCritFlash() { if (!gameState.settings.animations) return;
+    var el = document.createElement('div'); el.className = 'crit-flash'; document.body.appendChild(el);
+    setTimeout(function(){el.remove();}, 300);
+}
+function showDropGlow() { if (!gameState.settings.animations) return;
+    var el = document.createElement('div'); el.className = 'drop-glow'; document.body.appendChild(el);
+    setTimeout(function(){el.remove();}, 1000);
+}
+var QUALITY_COLORS = {common:'#9e9e9e',uncommon:'#4caf50',rare:'#2196f3',epic:'#9c27b0',legendary:'#ff9800'};
+/* ---- 事件绑定 ---- */
+function bindEvents() {
+    document.getElementById('realm').onclick = function(){
+        document.querySelectorAll('.nav-talisman').forEach(function(b){b.classList.remove('active');});
+        document.querySelector('[data-tab="roadmap"]').classList.add('active');
+        showModal('roadmap');
+    };
+    document.getElementById('cultivate-btn').onclick = function(){core.cultivate();};
+    document.getElementById('auto-cultivate-btn').onclick = function(){gameState.autoCultivate = !gameState.autoCultivate; updateUI(); showToast(gameState.autoCultivate?'闭关已开启':'闭关已关闭','success');};
+    document.getElementById('battle-btn').onclick = function(){core.startBattle();};
+    document.getElementById('boss-btn').onclick = function(){core.startBossBattle();};
+    document.getElementById('ba-attack').onclick = function(){core.playerAttack();};
+    document.getElementById('ba-skill').onclick = function(){core.playerSkill();};
+    document.getElementById('ba-heal').onclick = function(){core.playerHeal();};
+    document.getElementById('ba-item').onclick = function(){core.playerUseItem();};
+    document.getElementById('ba-flee').onclick = function(){core.playerFlee();};
+    document.getElementById('assign-stats-btn').onclick = function(){showAssignModal();};
+    document.querySelectorAll('.nav-talisman').forEach(function(btn){
+        btn.onclick = function(){document.querySelectorAll('.nav-talisman').forEach(function(b){b.classList.remove('active');}); btn.classList.add('active'); showModal(btn.dataset.tab);};
+    });
+    document.getElementById('modal-close').onclick = function(){document.getElementById('modal-overlay').style.display = 'none';};
+    document.getElementById('modal-overlay').onclick = function(e){if(e.target===document.getElementById('modal-overlay'))e.target.style.display = 'none';};
+}
+
+/* ---- 循环 ---- */
+function startLoops() {
+    setInterval(function(){if(gameState.autoCultivate && gameState.energy>0) core.cultivate();}, CONFIG.AUTO_CULTIVATE_INTERVAL);
+    setInterval(function(){if(gameState.energy<gameState.maxEnergy){gameState.energy=Math.min(gameState.maxEnergy,gameState.energy+1);updateUI();}}, CONFIG.ENERGY_REGEN_RATE*1000);
+    setInterval(function(){if(gameState.settings.autoSave) core.saveGame();}, CONFIG.SAVE_INTERVAL);
+    setInterval(function(){gameState.stats.lastOnlineTime=Date.now();}, 10000);
+}
+
+/* ---- 启动 ---- */
+document.addEventListener('DOMContentLoaded', function(){
+    core.init();
+    bindEvents();
+    startLoops();
+    window.core = core;
+    var startBGM = function(){ if(gameState.settings.sound) BGM.playMainBGM(); document.removeEventListener('click',startBGM); document.removeEventListener('touchstart',startBGM); };
+    document.addEventListener('click', startBGM);
+    document.addEventListener('touchstart', startBGM);
+});
+</script>
+</body>
+</html>
+<!-- build 1776771261 -->
+<!-- build 1776773714 -->
+<!-- build 1776774726 -->

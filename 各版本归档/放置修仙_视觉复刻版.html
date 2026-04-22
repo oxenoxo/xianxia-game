@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>放置修仙 - 视觉复刻版</title>
+    <!-- 引入国风字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            /* 国风视觉复刻色盘 */
+            --ink-black: #0d0d0d;
+            --paper-color: #e6e1d3;
+            --gold-accent: #d4af37;
+            --jade-green: #3a5a40;
+            --vermilion: #8b0000;
+            --mist-white: rgba(255, 255, 255, 0.05);
+            --scroll-shadow: rgba(0, 0, 0, 0.4);
+            
+            --bg-primary: var(--ink-black);
+            --text-primary: #333; /* 纸上文字 */
+            --text-on-dark: #d4d4d4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Serif SC', serif;
+            background: var(--bg-primary);
+            color: var(--text-on-dark);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 50% 50%, #1a1a1a 0%, #0d0d0d 100%),
+                url('https://www.transparenttextures.com/patterns/dark-matter.png');
+        }
+
+        /* 背景烟云动画 */
+        .mist-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/natural-paper.png');
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ==================== 卷轴容器 (PC/Mobile 响应式) ==================== */
+        #scroll-container {
+            position: relative;
+            width: 95%;
+            max-width: 1200px;
+            min-height: 80vh;
+            margin: 40px auto;
+            display: flex;
+            z-index: 10;
+            transition: all 0.5s ease;
+        }
+
+        /* 卷轴纸张 */
+        .scroll-paper {
+            background-color: var(--paper-color);
+            background-image: url('https://www.transparenttextures.com/patterns/handmade-paper.png');
+            flex: 1;
+            padding: 40px;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.2), 10px 10px 30px rgba(0,0,0,0.5);
+            border-left: 2px solid #ccc;
+            border-right: 2px solid #ccc;
+            position: relative;
+            color: var(--text-primary);
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 40px;
+        }
+
+        /* 卷轴轴心 (左/右) */
+        .scroll-rod {
+            width: 40px;
+            background: linear-gradient(to right, #4a3728, #7a5c48 50%, #4a3728);
+            border-radius: 5px;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        
+        .scroll-rod::before, .scroll-rod::after {
+            content: '';
+            position: absolute;
+            left: -5px;
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, #d4af37, #8b7355);
+            border-radius: 50%;
+            border: 2px solid #4a3728;
+        }
+        .scroll-rod::before { top: -25px; }
+        .scroll-rod::after { bottom: -25px; }
+
+        /* ==================== 角色展示区 (左侧) ==================== */
+        #char-display-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-right: 1px solid rgba(0,0,0,0.1);
+            padding-right: 20px;
+        }
+
+        .avatar-frame {
+            width: 220px;
+            height: 220px;
+            background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEwMCAxMGM0OS43IDAgOTAgNDAuMyA5MCA5MHMtNDAuMyA5MC05MCA5MC05MC00MC4zLTkwLTkwIDQwLjMtOTAgOTAtOTB6IiBmaWxsPSJub25lIiBzdHJva2U9IiNkNGFmMzciIHN0cm9rZS13aWR0aD0iNSIvPjwvc3ZnPg==');
+            background-size: contain;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.3));
+        }
+
+        .avatar-image {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 4px double var(--gold-accent);
+            overflow: hidden;
+        }
+        .avatar-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .realm-badge {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 2.2em;
+            color: var(--vermilion);
+            margin-top: 15px;
+            border-bottom: 2px solid var(--vermilion);
+            padding: 0 20px;
+        }
+
+        .char-name {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 1.8em;
+            margin: 10px 0;
+            letter-spacing: 5px;
+        }
+
+        /* 属性列表 (印章感) */
+        .stats-grid {
+            width: 100%;
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-tag {
+            background: rgba(139, 0, 0, 0.05);
+            border: 1px solid rgba(139, 0, 0, 0.1);
+            padding: 8px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            border-radius: 2px;
+        }
+
+        .stat-tag span:last-child {
+            color: var(--vermilion);
+            font-weight: bold;
+        }
+
+        /* ==================== 内容交互区 (右侧) ==================== */
+        #content-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* 标题装饰 */
+        .section-header {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 1.5em;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* 资源栏 */
+        .resource-bar {
+            display: flex;
+            gap: 20px;
+            background: rgba(0,0,0,0.05);
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .resource-item {
+            font-weight: bold;
+            color: var(--jade-green);
+        }
+
+        /* 动作面板 */
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .main-btn {
+            background: #fff;
+            background-image: url('https://www.transparenttextures.com/patterns/natural-paper.png');
+            border: 2px solid #555;
+            padding: 20px;
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 1.4em;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            box-shadow: 3px 3px 0px #333;
+        }
+
+        .main-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 5px 5px 0px var(--vermilion);
+            border-color: var(--vermilion);
+            color: var(--vermilion);
+        }
+
+        .main-btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px #333;
+        }
+
+        /* 战斗记录 (类似碑帖) */
+        .battle-journal {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid #ddd;
+            height: 150px;
+            overflow-y: auto;
+            padding: 15px;
+            font-size: 0.9em;
+            line-height: 1.8;
+            border-radius: 5px;
+        }
+
+        /* ==================== 底部功能选择 (玉佩样式) ==================== */
+        #bottom-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .nav-talisman {
+            width: 80px;
+            height: 120px;
+            background: #fff;
+            border: 1px solid #555;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 1.2em;
+            cursor: pointer;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            transition: all 0.3s;
+            clip-path: polygon(10% 0%, 90% 0%, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0% 90%, 0% 10%);
+        }
+
+        .nav-talisman:hover, .nav-talisman.active {
+            background: var(--vermilion);
+            color: #fff;
+            border-color: var(--gold-accent);
+        }
+
+        /* ==================== 响应式移动端 ==================== */
+        @media (max-width: 850px) {
+            #scroll-container {
+                flex-direction: column;
+                width: 90%;
+            }
+
+            .scroll-rod {
+                width: 100%;
+                height: 30px;
+                background: linear-gradient(to bottom, #4a3728, #7a5c48 50%, #4a3728);
+            }
+            
+            .scroll-rod::before, .scroll-rod::after {
+                top: -5px;
+                width: 40px;
+                height: 40px;
+            }
+            .scroll-rod::before { left: -20px; }
+            .scroll-rod::after { right: -20px; left: auto; }
+
+            .scroll-paper {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+
+            #char-display-area {
+                border-right: none;
+                border-bottom: 1px solid rgba(0,0,0,0.1);
+                padding-bottom: 20px;
+                padding-right: 0;
+            }
+
+            .nav-talisman {
+                width: 60px;
+                height: 90px;
+                font-size: 1em;
+            }
+        }
+
+        /* ==================== 进度条 (水墨感) ==================== */
+        .progress-ink-container {
+            width: 100%;
+            height: 12px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+        .progress-ink-fill {
+            height: 100%;
+            background: var(--vermilion);
+            transition: width 0.3s;
+            box-shadow: 0 0 10px rgba(139,0,0,0.5);
+        }
+
+        /* 模态框 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: var(--paper-color);
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            border: 4px double #4a3728;
+            max-height: 80vh;
+            overflow-y: auto;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="mist-overlay"></div>
+
+    <div id="game-container-root">
+        <div id="scroll-container">
+            <!-- 左轴 -->
+            <div class="scroll-rod"></div>
+            
+            <!-- 卷轴中心 -->
+            <div class="scroll-paper">
+                
+                <!-- 角色展示区 -->
+                <aside id="char-display-area">
+                    <div class="avatar-frame">
+                        <div class="avatar-image">
+                            <img src="avatar.png" alt="修仙头像">
+                        </div>
+                    </div>
+                    <div class="realm-badge" id="realm">凡人</div>
+                    <div class="char-name" id="char-name">修行者</div>
+                    
+                    <div style="width: 100%; margin: 10px 0;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.8em; margin-bottom:2px;">
+                            <span>灵力进度</span>
+                            <span id="exp-text">0/100</span>
+                        </div>
+                        <div class="progress-ink-container">
+                            <div class="progress-ink-fill" id="exp-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-tag"><span>生命</span><span id="stat-hp">100</span></div>
+                        <div class="stat-tag"><span>攻击</span><span id="stat-atk">10</span></div>
+                        <div class="stat-tag"><span>防御</span><span id="stat-def">5</span></div>
+                        <div class="stat-tag"><span>速度</span><span id="stat-spd">10</span></div>
+                    </div>
+                    
+                    <button class="main-btn" id="assign-stats-btn" style="margin-top:20px; font-size:1em; padding:10px 20px;">
+                        分配点数 (<span id="free-points-num">0</span>)
+                    </button>
+                </aside>
+
+                <!-- 内容交互区 -->
+                <section id="content-area">
+                    <div class="resource-bar">
+                        <div class="resource-item"><i class="fas fa-coins"></i> <span id="gold">0</span></div>
+                        <div class="resource-item"><i class="fas fa-gem"></i> <span id="gem">0</span></div>
+                        <div class="resource-item"><i class="fas fa-bolt"></i> <span id="energy">100/100</span></div>
+                    </div>
+
+                    <div id="tab-cultivation">
+                        <div class="section-header">仙路修行</div>
+                        <div class="action-grid">
+                            <button class="main-btn" id="cultivate-btn">
+                                <div><i class="fas fa-leaf"></i> 修炼</div>
+                                <div style="font-size:0.5em; margin-top:5px;">吐纳灵气</div>
+                            </button>
+                            <button class="main-btn" id="auto-cultivate-btn">
+                                <div><i class="fas fa-sync"></i> 闭关</div>
+                                <div id="auto-status" style="font-size:0.5em; margin-top:5px;">未开启</div>
+                            </button>
+                        </div>
+
+                        <div class="section-header" style="margin-top:30px;">历练挑战</div>
+                        <div style="display:flex; gap:20px; align-items:center; background:rgba(0,0,0,0.05); padding:15px; border-radius:5px;">
+                            <div style="font-size:3em;" id="enemy-emoji"><i class="fas fa-paw"></i></div>
+                            <div style="flex:1;">
+                                <div id="enemy-name" style="font-weight:bold;">灰狼</div>
+                                <div class="progress-ink-container">
+                                    <div class="progress-ink-fill" id="enemy-hp-fill" style="width: 100%"></div>
+                                </div>
+                                <div id="enemy-hp-text" style="font-size:0.8em; text-align:right;">50/50</div>
+                            </div>
+                        </div>
+                        <button class="main-btn" id="battle-btn" style="width:100%; margin-top:10px;"><i class="fas fa-crosshairs"></i> 斩妖除魔</button>
+                        
+                        <div class="battle-journal" id="battle-log">
+                            <div>欢迎来到放置修仙世界...</div>
+                        </div>
+                    </div>
+
+                    <!-- 底部切换 -->
+                    <div id="bottom-selector">
+                        <div class="nav-talisman active" data-tab="cultivation">修行</div>
+                        <div class="nav-talisman" data-tab="skills">神通</div>
+                        <div class="nav-talisman" data-tab="inventory">宝库</div>
+                        <div class="nav-talisman" data-tab="achievements">功德</div>
+                        <div class="nav-talisman" data-tab="shop">灵坊</div>
+                        <div class="nav-talisman" data-tab="settings">仙机</div>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- 右轴 -->
+            <div class="scroll-rod"></div>
+        </div>
+    </div>
+
+    <!-- 模态框 -->
+    <div id="modal-overlay" class="modal">
+        <div class="modal-content">
+            <div class="section-header">
+                <span id="modal-title">标题</span>
+                <span id="modal-close" style="cursor:pointer;">&times;</span>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- 游戏脚本 (逻辑继承自原版) -->
+    <script>
+        // 配置与状态 (保持与原版一致)
+        const CONFIG = {
+            SAVE_KEY: 'cultivation_save_visual_v2',
+            SAVE_INTERVAL: 30000,
+            AUTO_CULTIVATE_INTERVAL: 1000,
+            ENERGY_REGEN_RATE: 5,
+            BATTLE_TICK: 1000,
+        };
+
+        const REALMS = [
+            { name: '凡人', level: 1 },
+            { name: '练气期', level: 5 },
+            { name: '筑基期', level: 10 },
+            { name: '金丹期', level: 20 },
+            { name: '元婴期', level: 35 },
+            { name: '化神期', level: 50 },
+        ];
+
+        const SKILLS = [
+            { id: 'fireball', name: '火球术', icon: '<i class="fas fa-fire"></i>', desc: '发射火球', maxLevel: 10, cost: (l) => l * 100 },
+            { id: 'heal', name: '治愈术', icon: '<i class="fas fa-heart"></i>', desc: '恢复生命', maxLevel: 10, cost: (l) => l * 80 },
+            { id: 'meditation', name: '冥想', icon: '<i class="fas fa-leaf"></i>', desc: '提升修炼', maxLevel: 10, cost: (l) => l * 120 }
+        ];
+
+        const ENEMIES = [
+            { id: 'wolf', name: '灰狼', emoji: '<i class="fas fa-paw"></i>', hp: 50, atk: 8, def: 2, exp: 20, gold: 10 },
+            { id: 'boar', name: '野猪', emoji: '<i class="fas fa-paw"></i>', hp: 80, atk: 12, def: 5, exp: 35, gold: 20 }
+        ];
+
+        let gameState = {
+            level: 1, exp: 0, expToNext: 100, realm: '凡人',
+            gold: 0, gem: 0, energy: 100, maxEnergy: 100,
+            hp: 100, maxHp: 100, atk: 10, def: 5, spd: 10,
+            freePoints: 0, skills: {}, inventory: {}, achievements: [],
+            autoCultivate: false, stats: { totalCultivations: 0 }
+        };
+
+        class GameEngine {
+            constructor() {
+                this.load();
+                this.bind();
+                this.loop();
+                this.update();
+            }
+
+            load() {
+                const saved = localStorage.getItem(CONFIG.SAVE_KEY);
+                if (saved) gameState = Object.assign(gameState, JSON.parse(saved));
+            }
+
+            save() {
+                localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(gameState));
+            }
+
+            update() {
+                // UI 更新
+                document.getElementById('gold').innerText = gameState.gold;
+                document.getElementById('gem').innerText = gameState.gem;
+                document.getElementById('energy').innerText = `${gameState.energy}/${gameState.maxEnergy}`;
+                document.getElementById('realm').innerText = gameState.realm;
+                document.getElementById('stat-hp').innerText = gameState.maxHp;
+                document.getElementById('stat-atk').innerText = gameState.atk;
+                document.getElementById('stat-def').innerText = gameState.def;
+                document.getElementById('stat-spd').innerText = gameState.spd;
+                document.getElementById('free-points-num').innerText = gameState.freePoints;
+
+                const expPer = (gameState.exp / gameState.expToNext) * 100;
+                document.getElementById('exp-fill').style.width = expPer + '%';
+                document.getElementById('exp-text').innerText = `${gameState.exp}/${gameState.expToNext}`;
+
+                const autoBtn = document.getElementById('auto-cultivate-btn');
+                document.getElementById('auto-status').innerText = gameState.autoCultivate ? '闭关中...' : '未开启';
+                autoBtn.style.borderColor = gameState.autoCultivate ? '#8b0000' : '#555';
+            }
+
+            cultivate() {
+                if (gameState.energy <= 0) return alert('体力耗尽');
+                gameState.energy--;
+                gameState.exp += 10;
+                if (gameState.exp >= gameState.expToNext) {
+                    gameState.level++;
+                    gameState.exp = 0;
+                    gameState.expToNext = Math.floor(gameState.expToNext * 1.5);
+                    gameState.freePoints += 2;
+                    this.updateRealm();
+                }
+                this.update();
+            }
+
+            updateRealm() {
+                REALMS.forEach(r => { if (gameState.level >= r.level) gameState.realm = r.name; });
+            }
+
+            bind() {
+                document.getElementById('cultivate-btn').onclick = () => this.cultivate();
+                document.getElementById('auto-cultivate-btn').onclick = () => {
+                    gameState.autoCultivate = !gameState.autoCultivate;
+                    this.update();
+                };
+                
+                document.querySelectorAll('.nav-talisman').forEach(btn => {
+                    btn.onclick = () => {
+                        const tab = btn.dataset.tab;
+                        if (tab === 'cultivation') {
+                            document.getElementById('modal-overlay').style.display = 'none';
+                        } else {
+                            this.showModal(tab);
+                        }
+                    };
+                });
+
+                document.getElementById('modal-close').onclick = () => {
+                    document.getElementById('modal-overlay').style.display = 'none';
+                };
+            }
+
+            showModal(tab) {
+                const modal = document.getElementById('modal-overlay');
+                const title = document.getElementById('modal-title');
+                const body = document.getElementById('modal-body');
+                modal.style.display = 'flex';
+                title.innerText = tab === 'skills' ? '神通广大' : tab === 'inventory' ? '玲珑宝库' : '仙界信息';
+                body.innerHTML = `<div style="padding:20px; text-align:center;">此处正在建设中...</div>`;
+            }
+
+            loop() {
+                setInterval(() => {
+                    if (gameState.autoCultivate) this.cultivate();
+                }, CONFIG.AUTO_CULTIVATE_INTERVAL);
+
+                setInterval(() => {
+                    if (gameState.energy < gameState.maxEnergy) {
+                        gameState.energy++;
+                        this.update();
+                    }
+                }, CONFIG.ENERGY_REGEN_RATE * 1000);
+            }
+        }
+
+        window.onload = () => new GameEngine();
+    </script>
+</body>
+</html>
