@@ -321,12 +321,12 @@ core.on('battleStart', function(d) {
         showBattleActions(false); startAutoBattle();
     }
 });
-core.on('playerAttack', function(d) { addBattleLog('对 ' + gameState.currentEnemy.name + ' 造成 ' + d.dmg + ' 点伤害' + (d.crit ? ' 【暴击】' : '') + (d.extraAttack ? ' 【万剑归宗】' : ''), d.crit ? 'crit' : 'player-act'); showDmgPopup(d.dmg, d.crit); if(d.crit) showCritFlash(); shakeEnemy(); });
-core.on('playerSkill', function(d) { addBattleLog(d.name + '命中 ' + gameState.currentEnemy.name + '，造成 ' + d.dmg + ' 点伤害' + (d.crit ? ' 【暴击】' : ''), d.crit ? 'crit' : 'player-act'); showDmgPopup(d.dmg, d.crit); if(d.crit) showCritFlash(); shakeEnemy(); });
+core.on('playerAttack', function(d) { addBattleLog('对 ' + gameState.currentEnemy.name + ' 造成 ' + d.dmg + ' 点伤害' + (d.crit ? ' 【暴击】' : '') + (d.extraAttack ? ' 【万剑归宗】' : ''), d.crit ? 'crit' : 'player-act'); if(!gameState.autoBattle){ showDmgPopup(d.dmg, d.crit); if(d.crit) showCritFlash(); shakeEnemy(); } });
+core.on('playerSkill', function(d) { addBattleLog(d.name + '命中 ' + gameState.currentEnemy.name + '，造成 ' + d.dmg + ' 点伤害' + (d.crit ? ' 【暴击】' : ''), d.crit ? 'crit' : 'player-act'); if(!gameState.autoBattle){ showDmgPopup(d.dmg, d.crit); if(d.crit) showCritFlash(); shakeEnemy(); } });
 core.on('playerHeal', function(d) { addBattleLog('治愈术恢复了 ' + d.amt + ' 点生命', 'player-act'); updateUI(); });
 core.on('playerUseItem', function(d) { addBattleLog('使用生命药水，恢复 ' + d.amt + ' 点生命', 'player-act'); updateUI(); });
-core.on('bossSkill', function(d) { addBattleLog(d.name + ' 使用 ' + d.skill + '！造成 ' + d.dmg + ' 点伤害', 'enemy-act'); updateEnemyDisplay(); updateUI(); });
-core.on('enemyAttack', function(d) { addBattleLog((gameState.currentEnemy ? gameState.currentEnemy.name : '敌人') + ' 对你造成 ' + d.dmg + ' 点伤害' + (d.crit ? ' 【暴击】' : '') + (d.artImmortal ? ' 【不灭身触发！】' : ''), d.crit ? 'crit' : 'enemy-act'); showPlayerDmgPopup(d.dmg, d.crit); });
+core.on('bossSkill', function(d) { addBattleLog(d.name + ' 使用 ' + d.skill + '！造成 ' + d.dmg + ' 点伤害', 'enemy-act'); if(!gameState.autoBattle) updateEnemyDisplay(); updateUI(); });
+core.on('enemyAttack', function(d) { addBattleLog((gameState.currentEnemy ? gameState.currentEnemy.name : '敌人') + ' 对你造成 ' + d.dmg + ' 点伤害' + (d.crit ? ' 【暴击】' : '') + (d.artImmortal ? ' 【不灭身触发！】' : ''), d.crit ? 'crit' : 'enemy-act'); if(!gameState.autoBattle) showPlayerDmgPopup(d.dmg, d.crit); });
 core.on('stun', function() {
     addBattleLog('你被束缚了！下回合无法行动', 'system');
     gameState.playerActionLock = true; gameState.battleTurn = 'player';
