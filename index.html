@@ -840,7 +840,7 @@ function renderDevContent(){
         {label:'完成所有每日任务',fn:function(){if(!gameState.dailyData)gameState.dailyData={tasks:{}};GameCore.DAILY_TASKS.forEach(function(dt){if(!gameState.dailyData.tasks)gameState.dailyData.tasks={};gameState.dailyData.tasks[dt.id]={claimed:true};});updateUI();showToast('每日任务已全完成','system');}},
         {label:'签到7天奖励',fn:function(){if(!gameState.dailyData)gameState.dailyData={};gameState.dailyData.streak=6;var r=core.getCheckInReward(7);if(r.gold)core.gainGold(r.gold);if(r.gem)gameState.gem+=r.gem;showToast('已领第7天奖励','system');}},
         {label:'清空战斗日志',fn:function(){document.getElementById('battle-log').innerHTML='';showToast('日志已清空','system');}},
-        {label:'跳到下一个境界',fn:function(){var idx=REALMS.findIndex(function(r){return r.name===gameState.realm;});if(idx<REALMS.length-1){gameState.level=REALMS[idx+1].level;core.checkRealmBreak();updateUI();showToast('已突破至'+gameState.realm,'system');}}},
+        {label:'跳到下一个境界',fn:function(){var idx=REALMS.findIndex(function(r){return r.name===gameState.realm;});if(idx<REALMS.length-1){gameState.level=REALMS[idx+1].level;core.updateRealm();document.getElementById('realm-break-overlay').classList.remove('active');updateUI();showToast('已突破至'+gameState.realm,'system');}}},
     ];
     actions.forEach(function(a){
         var btn=document.createElement('button');
@@ -863,7 +863,8 @@ function applyDevChanges(){
             else if(key==='maxHp'){gameState.maxHp=val;gameState.hp=Math.min(gameState.hp,val);}
             else gameState[key]=val;
         });
-        core.checkRealmBreak();
+        core.updateRealm();
+        document.getElementById('realm-break-overlay').classList.remove('active');
         updateUI();
         showToast('修改已应用！','system');
     }catch(e){showToast('应用失败：'+e.message,'error');}
@@ -942,7 +943,9 @@ function applyLATChanges(){
             else if(key==='dodgeRate')gameState.dodgeRate=Math.max(0,Math.min(100,val));
             else gameState[key]=val;
         });
-        core.checkRealmBreak();
+        core.updateRealm();
+        /* 清理可能残留的突破动画层 */
+        document.getElementById('realm-break-overlay').classList.remove('active');
         updateUI();
         showToast('属性已修改！','system');
     }catch(e){showToast('应用失败：'+e.message,'error');}
