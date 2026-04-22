@@ -708,18 +708,14 @@ function renderSettingsModal(body) {
     /* 龙傲天模式（上线小程序前须删除本段 + game-core.js 中对应逻辑） */
     var longaotianWrap = document.createElement('div'); longaotianWrap.className = 'panel-list-item';
     longaotianWrap.style.marginTop = '10px'; longaotianWrap.style.borderTop = '2px solid var(--gold-accent)'; longaotianWrap.style.paddingTop = '10px';
-    var isLAT = gameState.settings.longaotian || false;
-    var btnText = isLAT ? '调整属性' : (isLAT===false?'已开启':'未开启');
-    var btnColor = isLAT ? 'var(--gold-accent)' : (gameState.settings.longaotian?'var(--success)':'var(--danger)');
+    var isLAT = !!gameState.settings.longaotian;
     longaotianWrap.innerHTML = '<div class="info"><div class="name">🐉 龙傲天模式</div></div>'
-        + '<div class="action"><button id="lat-toggle" class="btn-small" style="border-color:' + btnColor + ';color:' + btnColor + ';">' + btnText + '</button></div>';
+        + '<div class="action"><button id="lat-toggle" class="btn-small" style="border-color:var(--gold-accent);color:var(--gold-accent);">' + (isLAT?'调整属性':'开启') + '</button></div>';
     body.appendChild(longaotianWrap);
     document.getElementById('lat-toggle').onclick = function(){
         if(gameState.settings.longaotian){
-            // 已开启：弹出属性调整面板
             showLATPanel();
         } else {
-            // 未开启：要求密码
             var pwd=prompt('🔑 请输入密码开启龙傲天模式：','');
             if(pwd==='oxonb'){
                 gameState._latBackup={atk:gameState.atk,def:gameState.def,maxHp:gameState.maxHp,critRate:gameState.critRate,dodgeRate:gameState.dodgeRate};
@@ -727,17 +723,17 @@ function renderSettingsModal(body) {
                 gameState.atk=99999; gameState.def=99999; gameState.maxHp=999999; gameState.hp=999999;
                 gameState.critRate=100; gameState.dodgeRate=100;
                 showToast('龙傲天模式已开启！横扫一切！','system');
+                updateUI();
                 renderSettingsModal(body);
             } else if(pwd!==null){showToast('密码错误！','warning');}
         }
     };
-    // 已开启时额外显示"关闭"按钮
     if(isLAT){
         var closeWrap = document.createElement('div');
         closeWrap.style.marginTop='4px';
-        closeWrap.innerHTML='<button id="lat-close" class="btn-small" style="border-color:var(--danger);color:var(--danger);width:100%;">关闭龙傲天模式</button>';
+        closeWrap.innerHTML='<button id="lat-close-btn" class="btn-small" style="border-color:var(--danger);color:var(--danger);width:100%;">关闭龙傲天模式</button>';
         body.appendChild(closeWrap);
-        document.getElementById('lat-close').onclick=function(){
+        document.getElementById('lat-close-btn').onclick=function(){
             gameState.settings.longaotian=false;
             gameState.atk=gameState._latBackup?gameState._latBackup.atk:gameState.atk;
             gameState.def=gameState._latBackup?gameState._latBackup.def:gameState.def;
@@ -746,6 +742,7 @@ function renderSettingsModal(body) {
             gameState.critRate=gameState._latBackup?gameState._latBackup.critRate:gameState.critRate;
             gameState.dodgeRate=gameState._latBackup?gameState._latBackup.dodgeRate:gameState.dodgeRate;
             showToast('龙傲天模式已关闭','system');
+            updateUI();
             renderSettingsModal(body);
         };
     }
