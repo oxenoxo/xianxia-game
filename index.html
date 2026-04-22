@@ -356,12 +356,17 @@ core.on('loseBattle', function(d) {
     addBattleLog('战斗失败...' + (d.rebirthBonus > 0 ? ' 脱胎换骨额外恢复' + Math.floor(d.rebirthBonus*100) + '%HP' : ''), 'system'); showToast('战斗失败，生命恢复' + Math.floor((0.1+(d.rebirthBonus||0))*100) + '%', 'error');
     showBattleActions(false); updatePreviewEnemy(); updateUI();
     if (BGM.currentName === 'boss1' || BGM.currentName === 'boss2') BGM.playMainBGM();
-    // 自动历练：战败后等待恢复再战（3秒后重试）
-    if (d.autoContinue && gameState.hp > gameState.maxHp * 0.3) {
-        setTimeout(function(){ if (gameState.autoBattle && !gameState.currentEnemy) core.startBattle(); }, 3000);
-    } else if (d.autoContinue) {
-        // HP太低，等久一点
-        setTimeout(function(){ if (gameState.autoBattle && !gameState.currentEnemy && gameState.hp > gameState.maxHp * 0.3) core.startBattle(); }, 8000);
+    // 自动历练：战败后等HP恢复再战
+    if (d.autoContinue) {
+        if (window._autoRetryInterval) clearInterval(window._autoRetryInterval);
+        window._autoRetryInterval = setInterval(function(){
+            if (!gameState.autoBattle) { clearInterval(window._autoRetryInterval); window._autoRetryInterval = null; return; }
+            if (gameState.currentEnemy) { clearInterval(window._autoRetryInterval); window._autoRetryInterval = null; return; }
+            if (gameState.hp >= gameState.maxHp * 0.5) {
+                clearInterval(window._autoRetryInterval); window._autoRetryInterval = null;
+                core.startBattle();
+            }
+        }, 2000);
     }
 });
 core.on('toggleSetting', function(d) {
