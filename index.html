@@ -252,7 +252,7 @@ var ENEMY_ICONS = {
     demon:'<i class="fas fa-skull"></i>', ancient:'<i class="fas fa-spider"></i>'
 };
 var EQUIP_ICONS = {
-    weapon:'<i class="fas fa-hammer"></i>', armor:'<i class="fas fa-vest"></i>', acc1:'<i class="fas fa-ring"></i>'
+    weapon:'<i class="fas fa-hammer"></i>', armor:'<i class="fas fa-vest"></i>', acc:'<i class="fas fa-ring"></i>', acc1:'<i class="fas fa-ring"></i>', acc2:'<i class="fas fa-ring"></i>'
 };
 
 /* ========== 渲染层 ========== */
@@ -608,7 +608,7 @@ function renderShopModal(body) {
     body.appendChild(grid);
     var eqTitle = document.createElement('div'); eqTitle.style.cssText = 'font-size:0.9em;color:#666;margin:15px 0 8px;'; eqTitle.textContent = '装备锻造（随机品质）'; body.appendChild(eqTitle);
     var eqGrid = document.createElement('div'); eqGrid.className = 'shop-grid';
-    [{slot:'weapon',name:'锻造武器',price:3,currency:'gem'},{slot:'armor',name:'锻造护甲',price:3,currency:'gem'},{slot:'acc1',name:'锻造饰品',price:3,currency:'gem'}].forEach(function(item) {
+    [{slot:'weapon',name:'锻造武器',price:3,currency:'gem'},{slot:'armor',name:'锻造护甲',price:3,currency:'gem'},{slot:'acc',name:'锻造饰品',price:3,currency:'gem'}].forEach(function(item) {
         var canBuy = gameState.gem >= item.price; var d = document.createElement('div'); d.className = 'shop-item';
         d.innerHTML = '<div class="item-icon"><i class="fas fa-' + (item.slot==='weapon'?'hammer':item.slot==='armor'?'vest':'ring') + '" style="font-size:2.5em;"></i></div><div style="font-weight:bold;margin-bottom:4px;">' + item.name + '</div><div class="price"><i class="fas fa-gem"></i> ' + item.price + '</div>';
         d.style.opacity = canBuy ? '1' : '0.5';
@@ -907,14 +907,20 @@ function showLATPanel(){
     document.getElementById('lat-close').onclick=function(){ov.style.display='none';};
 }
 function _latRecalcByLevel(newLevel){
-    var baseMaxHp=100+(newLevel-1)*10+(gameState.hpAllocated||0)+(gameState.equipBonus.hp||0);
+    /* 按升级公式重算基础属性，不含装备加成 */
+    var baseMaxHp=100+(newLevel-1)*10;
     var baseAtk=10+(newLevel-1)*2;
     var baseDef=5+(newLevel-1)*1;
     var baseSpd=10+(newLevel-1)*1;
     var baseMaxEnergy=100+Math.floor(newLevel/5)*20;
-    var baseExpToNext=Math.floor(100*Math.pow(CONFIG.EXP_GROWTH_RATE,newLevel-1));
+    /* expToNext 安全计算，防止溢出 NaN */
+    var baseExpToNext=100;
+    for(var i=1;i<newLevel;i++){
+        baseExpToNext=Math.floor(baseExpToNext*CONFIG.EXP_GROWTH_RATE);
+        if(!isFinite(baseExpToNext)){baseExpToNext=999999999;break;}
+    }
     var newRealm=REALMS[0].name;
-    for(var i=REALMS.length-1;i>=0;i--){if(newLevel>=REALMS[i].level){newRealm=REALMS[i].name;break;}}
+    for(var j=REALMS.length-1;j>=0;j--){if(newLevel>=REALMS[j].level){newRealm=REALMS[j].name;break;}}
     return {maxHp:baseMaxHp,atk:baseAtk,def:baseDef,spd:baseSpd,maxEnergy:baseMaxEnergy,expToNext:baseExpToNext,realm:newRealm};
 }
 function renderLATContent(){
@@ -973,28 +979,35 @@ function applyLATChanges(){
         var levelEl=document.getElementById(latInputs['level']);
         var newLevel=levelEl?parseInt(levelEl.value):gameState.level;
         if(!isNaN(newLevel)&&newLevel!==gameState.level&&newLevel>=1){
+            /* 等级变化：重算基础属性 + freePoints 联动 */
             var r=_latRecalcByLevel(newLevel);
+            var levelDiff=newLevel-gameState.level;
             gameState.level=newLevel;
             gameState.maxHp=r.maxHp; gameState.hp=r.maxHp;
             gameState.atk=r.atk; gameState.def=r.def; gameState.spd=r.spd;
             gameState.maxEnergy=r.maxEnergy; gameState.energy=r.maxEnergy;
             gameState.expToNext=r.expToNext;
             gameState.realm=r.realm;
-            var keys=['gold','gem','luck','comp','freePoints','critRate','dodgeRate','enlightenment'];
+            gameState.exp=0;
+            gameState.freePoints=Math.max(0,gameState.freePoints+levelDiff*2);
+            /* 读取非基础属性 */
+            var keys=['gold','gem','luck','critRate','dodgeRate','enlightenment'];
             keys.forEach(function(key){
                 var el=document.getElementById(latInputs[key]);
                 if(!el)return; var val=parseFloat(el.value);
                 if(isNaN(val))return;
-                if(key==='comp')gameState.comprehension=Math.max(0,val);
-                else if(key==='critRate')gameState.critRate=Math.max(0,Math.min(100,val));
+                if(key==='critRate')gameState.critRate=Math.max(0,Math.min(100,val));
                 else if(key==='dodgeRate')gameState.dodgeRate=Math.max(0,Math.min(100,val));
-                else if(key==='freePoints')gameState.freePoints=Math.max(0,val);
                 else if(key==='enlightenment')gameState.enlightenment=Math.max(0,val);
                 else if(key==='luck')gameState.luck=Math.max(0,val);
                 else if(key==='gold')gameState.gold=Math.max(0,val);
                 else if(key==='gem')gameState.gem=Math.max(0,val);
             });
-            var overrideKeys=['hp','maxHp','atk','def','spd','energy','maxEnergy','exp','expToNext'];
+            /* 读取悟性 */
+            var compEl=document.getElementById(latInputs['comp']);
+            if(compEl){var compVal=parseFloat(compEl.value);if(!isNaN(compVal))gameState.comprehension=Math.max(0,compVal);}
+            /* 允许在重算基础上微调 */
+            var overrideKeys=['hp','maxHp','atk','def','spd','energy','maxEnergy','exp','expToNext','freePoints'];
             overrideKeys.forEach(function(key){
                 var el=document.getElementById(latInputs[key]);
                 if(!el)return; var val=parseFloat(el.value);
@@ -1005,34 +1018,39 @@ function applyLATChanges(){
                 else if(key==='maxEnergy'){gameState.maxEnergy=Math.max(1,val);gameState.energy=Math.min(gameState.energy,val);}
                 else if(key==='exp')gameState.exp=Math.max(0,val);
                 else if(key==='expToNext')gameState.expToNext=Math.max(1,val);
+                else if(key==='freePoints')gameState.freePoints=Math.max(0,val);
                 else if(key==='atk')gameState.atk=Math.max(0,val);
                 else if(key==='def')gameState.def=Math.max(0,val);
                 else if(key==='spd')gameState.spd=Math.max(0,val);
             });
         } else {
+            /* 等级没变，逐字段应用 */
+            var fieldMap={
+                'level':function(v){gameState.level=Math.max(1,v);},
+                'exp':function(v){gameState.exp=Math.max(0,v);},
+                'expToNext':function(v){gameState.expToNext=Math.max(1,v);},
+                'hp':function(v){gameState.hp=Math.max(0,Math.min(v,gameState.maxHp));},
+                'maxHp':function(v){gameState.maxHp=Math.max(1,v);gameState.hp=Math.min(gameState.hp,v);},
+                'energy':function(v){gameState.energy=Math.max(0,Math.min(v,gameState.maxEnergy));},
+                'maxEnergy':function(v){gameState.maxEnergy=Math.max(1,v);gameState.energy=Math.min(gameState.energy,v);},
+                'comp':function(v){gameState.comprehension=Math.max(0,v);},
+                'critRate':function(v){gameState.critRate=Math.max(0,Math.min(100,v));},
+                'dodgeRate':function(v){gameState.dodgeRate=Math.max(0,Math.min(100,v));},
+                'freePoints':function(v){gameState.freePoints=Math.max(0,v);},
+                'enlightenment':function(v){gameState.enlightenment=Math.max(0,v);},
+                'luck':function(v){gameState.luck=Math.max(0,v);},
+                'gold':function(v){gameState.gold=Math.max(0,v);},
+                'gem':function(v){gameState.gem=Math.max(0,v);},
+                'atk':function(v){gameState.atk=Math.max(0,v);},
+                'def':function(v){gameState.def=Math.max(0,v);},
+                'spd':function(v){gameState.spd=Math.max(0,v);}
+            };
             Object.keys(latInputs).forEach(function(key){
                 var el=document.getElementById(latInputs[key]);
                 if(!el)return;
                 var val=parseFloat(el.value);
                 if(isNaN(val))return;
-                if(key==='level'){gameState.level=Math.max(1,val);}
-                else if(key==='exp')gameState.exp=Math.max(0,val);
-                else if(key==='expToNext')gameState.expToNext=Math.max(1,val);
-                else if(key==='hp')gameState.hp=Math.max(0,Math.min(val,gameState.maxHp));
-                else if(key==='maxHp'){gameState.maxHp=Math.max(1,val);gameState.hp=Math.min(gameState.hp,val);}
-                else if(key==='energy')gameState.energy=Math.max(0,Math.min(val,gameState.maxEnergy));
-                else if(key==='maxEnergy'){gameState.maxEnergy=Math.max(1,val);gameState.energy=Math.min(gameState.energy,val);}
-                else if(key==='comp')gameState.comprehension=Math.max(0,val);
-                else if(key==='critRate')gameState.critRate=Math.max(0,Math.min(100,val));
-                else if(key==='dodgeRate')gameState.dodgeRate=Math.max(0,Math.min(100,val));
-                else if(key==='freePoints')gameState.freePoints=Math.max(0,val);
-                else if(key==='enlightenment')gameState.enlightenment=Math.max(0,val);
-                else if(key==='luck')gameState.luck=Math.max(0,val);
-                else if(key==='gold')gameState.gold=Math.max(0,val);
-                else if(key==='gem')gameState.gem=Math.max(0,val);
-                else if(key==='atk')gameState.atk=Math.max(0,val);
-                else if(key==='def')gameState.def=Math.max(0,val);
-                else if(key==='spd')gameState.spd=Math.max(0,val);
+                if(fieldMap[key])fieldMap[key](val);
             });
         }
         core.updateRealm();

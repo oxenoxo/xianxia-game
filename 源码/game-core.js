@@ -110,11 +110,11 @@ var EQUIP_BASES = [
     {id:'armor_iron',name:'玄铁甲',slot:'armor',baseAtk:2,baseDef:18,baseHp:100,baseSpd:-2,baseLuck:0,quality:'rare',price:2000},
     {id:'armor_dragon',name:'龙鳞甲',slot:'armor',baseAtk:5,baseDef:30,baseHp:200,baseSpd:0,baseLuck:3,quality:'epic',price:5000},
     {id:'armor_immortal',name:'仙灵袍',slot:'armor',baseAtk:10,baseDef:45,baseHp:400,baseSpd:5,baseLuck:5,quality:'legendary',price:15000},
-    {id:'acc_ring',name:'铜戒指',slot:'acc1',baseAtk:2,baseDef:1,baseHp:10,baseSpd:1,baseLuck:1,quality:'common',price:150},
-    {id:'acc_jade',name:'玉佩',slot:'acc1',baseAtk:5,baseDef:3,baseHp:30,baseSpd:3,baseLuck:2,quality:'uncommon',price:500},
-    {id:'acc_dragon',name:'龙珠',slot:'acc1',baseAtk:10,baseDef:5,baseHp:80,baseSpd:5,baseLuck:5,quality:'rare',price:2500},
-    {id:'acc_phoenix',name:'凤羽簪',slot:'acc1',baseAtk:18,baseDef:8,baseHp:150,baseSpd:8,baseLuck:8,quality:'epic',price:6000},
-    {id:'acc_immortal',name:'道祖遗珠',slot:'acc1',baseAtk:30,baseDef:15,baseHp:300,baseSpd:12,baseLuck:12,quality:'legendary',price:18000},
+    {id:'acc_ring',name:'铜戒指',slot:'acc',baseAtk:2,baseDef:1,baseHp:10,baseSpd:1,baseLuck:1,quality:'common',price:150},
+    {id:'acc_jade',name:'玉佩',slot:'acc',baseAtk:5,baseDef:3,baseHp:30,baseSpd:3,baseLuck:2,quality:'uncommon',price:500},
+    {id:'acc_dragon',name:'龙珠',slot:'acc',baseAtk:10,baseDef:5,baseHp:80,baseSpd:5,baseLuck:5,quality:'rare',price:2500},
+    {id:'acc_phoenix',name:'凤羽簪',slot:'acc',baseAtk:18,baseDef:8,baseHp:150,baseSpd:8,baseLuck:8,quality:'epic',price:6000},
+    {id:'acc_immortal',name:'道祖遗珠',slot:'acc',baseAtk:30,baseDef:15,baseHp:300,baseSpd:12,baseLuck:12,quality:'legendary',price:18000},
 ];
 
 /* ========== 消耗品 ========== */
@@ -330,6 +330,12 @@ GameCore.prototype.loadGame = function() {
     if (saved) {
         try { gameState = this.mergeDeep(gameState, JSON.parse(saved)); } catch (e) { console.error('加载失败', e); }
     }
+    /* 迁移旧存档：饰品 slot 从 acc1 改为 acc */
+    if (gameState.equipBag) {
+        gameState.equipBag.forEach(function(inst) {
+            if (inst.slot === 'acc1' || inst.slot === 'acc2') inst.slot = 'acc';
+        });
+    }
 };
 GameCore.prototype.saveGame = function() {
     try {
@@ -452,6 +458,12 @@ GameCore.prototype.getTotalStat = function(base) {
 GameCore.prototype.equipItem = function(uid) {
     var inst = this.findEquipInBag(uid); if (!inst) return;
     var slot = inst.slot;
+    /* 饰品类：自动选择空的 acc1 或 acc2，都满则替换 acc1 */
+    if (slot === 'acc') {
+        if (!gameState.equipment.acc1) slot = 'acc1';
+        else if (!gameState.equipment.acc2) slot = 'acc2';
+        else slot = 'acc1';
+    }
     if (gameState.equipment[slot]) { /* 已装备的留在bag里 */ }
     var oldEquipHp = gameState.equipBonus.hp || 0;
     gameState.equipment[slot] = uid;
@@ -729,6 +741,10 @@ GameCore.prototype.playerFlee = function() {
     if (Math.random() < fleeRate) {
         this.emit('fleeSuccess', {});
         gameState.currentEnemy = null;
+        gameState.battleMode = null;
+        gameState.battleTurn = 'player';
+        gameState.playerActionLock = false;
+        gameState.battleShield = 0;
     } else {
         this.emit('fleeFail', {});
         this.enemyTurn();
