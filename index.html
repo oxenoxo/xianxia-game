@@ -349,7 +349,24 @@ core.on('winBattle', function(d) {
     if (BGM.currentName === 'boss1' || BGM.currentName === 'boss2') BGM.playMainBGM();
     // 自动历练：战斗结束后自动开始下一场
     if (d.autoContinue && !gameState.currentEnemy) {
-        setTimeout(function(){ if (gameState.autoBattle && !gameState.currentEnemy) core.startBattle(); }, 600);
+        if (gameState.hp >= gameState.maxHp * 0.4) {
+            setTimeout(function(){ if (gameState.autoBattle && !gameState.currentEnemy) core.startBattle(); }, 600);
+        } else {
+            // HP不够，等恢复再战
+            if (window._autoRetryInterval) clearInterval(window._autoRetryInterval);
+            window._autoRetryInterval = setInterval(function(){
+                if (!gameState.autoBattle) { clearInterval(window._autoRetryInterval); window._autoRetryInterval = null; return; }
+                if (gameState.currentEnemy) { clearInterval(window._autoRetryInterval); window._autoRetryInterval = null; return; }
+                if (gameState.hp < gameState.maxHp) {
+                    gameState.hp = Math.min(gameState.maxHp, gameState.hp + Math.floor(gameState.maxHp * 0.05));
+                    updateUI();
+                }
+                if (gameState.hp >= gameState.maxHp * 0.5) {
+                    clearInterval(window._autoRetryInterval); window._autoRetryInterval = null;
+                    core.startBattle();
+                }
+            }, 2000);
+        }
     }
 });
 core.on('loseBattle', function(d) {
@@ -362,6 +379,11 @@ core.on('loseBattle', function(d) {
         window._autoRetryInterval = setInterval(function(){
             if (!gameState.autoBattle) { clearInterval(window._autoRetryInterval); window._autoRetryInterval = null; return; }
             if (gameState.currentEnemy) { clearInterval(window._autoRetryInterval); window._autoRetryInterval = null; return; }
+            // 战后缓慢恢复HP
+            if (gameState.hp < gameState.maxHp) {
+                gameState.hp = Math.min(gameState.maxHp, gameState.hp + Math.floor(gameState.maxHp * 0.05));
+                updateUI();
+            }
             if (gameState.hp >= gameState.maxHp * 0.5) {
                 clearInterval(window._autoRetryInterval); window._autoRetryInterval = null;
                 core.startBattle();
