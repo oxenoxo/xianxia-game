@@ -321,8 +321,8 @@ core.on('battleStart', function(d) {
         showBattleActions(false); startAutoBattle();
     }
 });
-core.on('playerAttack', function(d) { addBattleLog('对 ' + gameState.currentEnemy.name + ' 造成 ' + d.dmg + ' 点伤害' + (d.crit ? ' 【暴击】' : '') + (d.extraAttack ? ' 【万剑归宗】' : ''), d.crit ? 'crit' : 'player-act'); if(!gameState.autoBattle){ showDmgPopup(d.dmg, d.crit); if(d.crit) showCritFlash(); shakeEnemy(); } });
-core.on('playerSkill', function(d) { addBattleLog(d.name + '命中 ' + gameState.currentEnemy.name + '，造成 ' + d.dmg + ' 点伤害' + (d.crit ? ' 【暴击】' : ''), d.crit ? 'crit' : 'player-act'); if(!gameState.autoBattle){ showDmgPopup(d.dmg, d.crit); if(d.crit) showCritFlash(); shakeEnemy(); } });
+core.on('playerAttack', function(d) { addBattleLog('对 ' + gameState.currentEnemy.name + ' 造成 ' + d.dmg + ' 点伤害' + (d.crit ? ' 【暴击】' : '') + (d.extraAttack ? ' 【万剑归宗】' : ''), d.crit ? 'crit' : 'player-act'); if(!gameState.autoBattle){ showDmgPopup(d.dmg, d.crit); if(d.crit && gameState.currentEnemy.isBoss) showCritFlash(); shakeEnemy(); } });
+core.on('playerSkill', function(d) { addBattleLog(d.name + '命中 ' + gameState.currentEnemy.name + '，造成 ' + d.dmg + ' 点伤害' + (d.crit ? ' 【暴击】' : ''), d.crit ? 'crit' : 'player-act'); if(!gameState.autoBattle){ showDmgPopup(d.dmg, d.crit); if(d.crit && gameState.currentEnemy.isBoss) showCritFlash(); shakeEnemy(); } });
 core.on('playerHeal', function(d) { addBattleLog('治愈术恢复了 ' + d.amt + ' 点生命', 'player-act'); updateUI(); });
 core.on('playerUseItem', function(d) { addBattleLog('使用生命药水，恢复 ' + d.amt + ' 点生命', 'player-act'); updateUI(); });
 core.on('bossSkill', function(d) { addBattleLog(d.name + ' 使用 ' + d.skill + '！造成 ' + d.dmg + ' 点伤害', 'enemy-act'); if(!gameState.autoBattle) updateEnemyDisplay(); updateUI(); });
