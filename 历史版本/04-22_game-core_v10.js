@@ -83,20 +83,13 @@ var ENEMIES = [
     {id:'snake',name:'毒蛇',hp:40,atk:15,def:1,exp:25,gold:15,isBoss:false},
     {id:'bear',name:'棕熊',hp:150,atk:20,def:10,exp:60,gold:40,isBoss:false},
     {id:'tiger',name:'猛虎',hp:200,atk:30,def:15,exp:100,gold:70,isBoss:false},
-    {id:'bandit',name:'山贼头领',hp:120,atk:15,def:6,exp:60,gold:40,isBoss:true,skills:['taunt'],unlockLevel:8},
-    {id:'fox',name:'妖狐',hp:250,atk:25,def:12,exp:120,gold:80,isBoss:true,skills:['charm','illusion'],unlockLevel:15},
-    {id:'dragon',name:'幼龙',hp:500,atk:50,def:30,exp:300,gold:200,isBoss:true,skills:['breath','tail'],unlockLevel:25},
-    {id:'demon',name:'魔将',hp:800,atk:70,def:40,exp:500,gold:400,isBoss:true,skills:['dark','summon'],unlockLevel:45},
-    {id:'ninefox',name:'九尾妖狐',hp:1200,atk:85,def:50,exp:800,gold:600,isBoss:true,skills:['charm','tail','illusion'],unlockLevel:55},
-    {id:'ancient',name:'上古妖王',hp:1500,atk:100,def:60,exp:1000,gold:800,isBoss:true,skills:['web','devour'],unlockLevel:70},
-    {id:'tianmo',name:'天魔',hp:2500,atk:130,def:80,exp:1500,gold:1200,isBoss:true,skills:['dark','devour','summon'],unlockLevel:90},
+    {id:'dragon',name:'幼龙',hp:500,atk:50,def:30,exp:300,gold:200,isBoss:true,skills:['breath','tail']},
+    {id:'demon',name:'魔将',hp:800,atk:70,def:40,exp:500,gold:400,isBoss:true,skills:['dark','summon']},
+    {id:'ancient',name:'上古妖王',hp:1500,atk:100,def:60,exp:1000,gold:800,isBoss:true,skills:['web','devour']},
 ];
 
 /* ========== Boss 技能表 ========== */
 var BOSS_SKILLS = {
-    taunt:{name:'嘲讽',desc:'激怒对手',mult:1.2,chance:0.2},
-    charm:{name:'魅惑',desc:'迷惑对手',mult:1.3,chance:0.2,stun:true},
-    illusion:{name:'幻术',desc:'制造幻象',mult:1.1,chance:0.15,healPct:0.15},
     breath:{name:'龙息',desc:'吐出烈焰',mult:1.8,chance:0.25},
     tail:{name:'尾击',desc:'横扫尾巴',mult:1.4,chance:0.2},
     dark:{name:'暗影斩',desc:'释放暗影',mult:2.0,chance:0.2},
@@ -104,20 +97,6 @@ var BOSS_SKILLS = {
     web:{name:'蛛网束缚',desc:'缠绕敌人',mult:1.3,chance:0.2,stun:true},
     devour:{name:'吞噬',desc:'吸取生命',mult:1.6,chance:0.2,healPct:0.3},
 };
-
-/* ========== 秘境 ========== */
-var DUNGEONS = [
-    {id:'cave',name:'灵石矿洞',desc:'蕴藏灵石的矿洞，可获得大量金币',unlockLevel:5,type:'gold',icon:'fa-mountain',
-     reward:{goldBase:100,gemBase:0,expBase:50},cost:20,cooldown:0},
-    {id:'forest',name:'迷雾森林',desc:'弥漫瘴气的森林，蕴含丰富经验',unlockLevel:10,type:'exp',icon:'fa-tree',
-     reward:{goldBase:30,gemBase:0,expBase:200},cost:25,cooldown:0},
-    {id:'tower',name:'镇妖塔',desc:'封印妖魔的高塔，挑战获取宝石',unlockLevel:20,type:'gem',icon:'fa-landmark',
-     reward:{goldBase:50,gemBase:5,expBase:80},cost:30,cooldown:0},
-    {id:'ruins',name:'上古遗迹',desc:'远古仙人遗迹，有概率获得稀有装备',unlockLevel:35,type:'equip',icon:'fa-dungeon',
-     reward:{goldBase:80,gemBase:2,expBase:150},cost:40,cooldown:0},
-    {id:'void',name:'虚空裂缝',desc:'连接异界的裂缝，收益极高但危险重重',unlockLevel:55,type:'all',icon:'fa-bolt',
-     reward:{goldBase:200,gemBase:8,expBase:400},cost:50,cooldown:0},
-];
 
 /* ========== 装备模板 ========== */
 var EQUIP_BASES = [
@@ -600,25 +579,10 @@ GameCore.prototype.getAvailableEnemies = function() {
     var total = weights.reduce(function(a, b){return a + b;}, 0); var r = Math.random() * total; var acc = 0;
     for (var i = 0; i < pool.length; i++) { acc += weights[i]; if (r <= acc) return pool[i]; } return pool[pool.length - 1];
 };
-GameCore.prototype.getAvailableBosses = function() {
-    var bosses = ENEMIES.filter(function(e){return e.isBoss;});
-    var available = [];
-    for (var i = 0; i < bosses.length; i++) {
-        var ul = bosses[i].unlockLevel || 25;
-        if (gameState.level >= ul) available.push(bosses[i]);
-    }
-    return available;
-};
 GameCore.prototype.getAvailableBoss = function() {
-    var available = this.getAvailableBosses();
+    var bosses = ENEMIES.filter(function(e){return e.isBoss;}); var unlockLevels = [25, 45, 70]; var available = [];
+    for (var i = 0; i < bosses.length && i < unlockLevels.length; i++) { if (gameState.level >= unlockLevels[i]) available.push(bosses[i]); }
     return available.length > 0 ? available[available.length - 1] : null;
-};
-GameCore.prototype.getAvailableDungeons = function() {
-    var available = [];
-    for (var i = 0; i < DUNGEONS.length; i++) {
-        if (gameState.level >= DUNGEONS[i].unlockLevel) available.push(DUNGEONS[i]);
-    }
-    return available;
 };
 GameCore.prototype.scaleEnemy = function(tpl) {
     var lv = gameState.level;
@@ -639,45 +603,10 @@ GameCore.prototype.startBossBattle = function() {
     this.initDailyTasks(); gameState.stats.totalBattlesDay++;
     var boss = this.getAvailableBoss();
     if (!boss) { this.emit('warning', {msg: '尚未解锁Boss'}); return; }
-    this._startBossBattleWith(boss);
-};
-GameCore.prototype.startBossBattleById = function(bossId) {
-    if (gameState.currentEnemy) { this.emit('warning', {msg: '当前有战斗进行中'}); return; }
-    if (gameState.hp <= 0) { gameState.hp = gameState.maxHp; }
-    var bosses = ENEMIES.filter(function(e){return e.isBoss;});
-    var boss = null;
-    for (var i = 0; i < bosses.length; i++) { if (bosses[i].id === bossId) { boss = bosses[i]; break; } }
-    if (!boss) { this.emit('warning', {msg: 'Boss不存在'}); return; }
-    var ul = boss.unlockLevel || 25;
-    if (gameState.level < ul) { this.emit('warning', {msg: '等级不足，需' + ul + '级'}); return; }
-    this.initDailyTasks(); gameState.stats.totalBattlesDay++;
-    this._startBossBattleWith(boss);
-};
-GameCore.prototype._startBossBattleWith = function(boss) {
-    if (gameState.hp <= 0) { gameState.hp = gameState.maxHp; }
     gameState.currentEnemy = this.scaleEnemy(boss); gameState.battleMode = 'manual';
     gameState.battleShield = 0;
     if (this.hasArt('aura_shield')) { gameState.battleShield = Math.floor(gameState.maxHp * this.getArtEffect('aura_shield')); }
     this.emit('battleStart', {enemy: gameState.currentEnemy, isBoss: true, shield: gameState.battleShield});
-};
-GameCore.prototype.enterDungeon = function(dungeonId) {
-    if (gameState.currentEnemy) { this.emit('warning', {msg: '当前有战斗进行中'}); return; }
-    var dg = null;
-    for (var i = 0; i < DUNGEONS.length; i++) { if (DUNGEONS[i].id === dungeonId) { dg = DUNGEONS[i]; break; } }
-    if (!dg) { this.emit('warning', {msg: '秘境不存在'}); return; }
-    if (gameState.level < dg.unlockLevel) { this.emit('warning', {msg: '等级不足，需' + dg.unlockLevel + '级'}); return; }
-    if (gameState.energy < dg.cost) { this.emit('warning', {msg: '灵力不足，需' + dg.cost + '点'}); return; }
-    gameState.energy -= dg.cost;
-    this.initDailyTasks(); gameState.stats.totalBattlesDay++;
-    // 秘境中遭遇随机敌人（可能是Boss）
-    var boss = this.getAvailableBoss(); var tpl;
-    if (boss && Math.random() < 0.5) tpl = boss; else tpl = this.getAvailableEnemies();
-    gameState.currentEnemy = this.scaleEnemy(tpl);
-    gameState.currentEnemy._dungeonId = dungeonId; // 标记来自秘境
-    gameState.battleMode = tpl.isBoss ? 'manual' : 'auto';
-    gameState.battleShield = 0;
-    if (this.hasArt('aura_shield')) { gameState.battleShield = Math.floor(gameState.maxHp * this.getArtEffect('aura_shield')); }
-    this.emit('battleStart', {enemy: gameState.currentEnemy, isBoss: tpl.isBoss, shield: gameState.battleShield, dungeon: dg});
 };
 
 GameCore.prototype.startBattle = function() {
@@ -685,7 +614,7 @@ GameCore.prototype.startBattle = function() {
     if (gameState.hp <= 0) { gameState.hp = gameState.maxHp; }
     this.initDailyTasks(); gameState.stats.totalBattlesDay++;
     var boss = this.getAvailableBoss(); var tpl;
-    if (boss && Math.random() < 0.25) tpl = boss; else tpl = this.getAvailableEnemies();
+    if (boss && Math.random() < 0.35) tpl = boss; else tpl = this.getAvailableEnemies();
     gameState.currentEnemy = this.scaleEnemy(tpl); gameState.battleMode = tpl.isBoss ? 'manual' : 'auto';
     gameState.battleShield = 0;
     if (this.hasArt('aura_shield')) { gameState.battleShield = Math.floor(gameState.maxHp * this.getArtEffect('aura_shield')); }
@@ -896,26 +825,10 @@ GameCore.prototype.winBattle = function() {
     }
     // Boss必掉1宝石+1悟性点
     if (e.isBoss) { gameState.gem += 1; gameState.enlightenment += 1; }
-    // 秘境额外奖励
-    var dungeonBonus = null;
-    if (e._dungeonId) {
-        var dg = null;
-        for (var di = 0; di < DUNGEONS.length; di++) { if (DUNGEONS[di].id === e._dungeonId) { dg = DUNGEONS[di]; break; } }
-        if (dg) {
-            var lvScale = 1 + (gameState.level - dg.unlockLevel) * 0.05;
-            var dgGold = Math.floor(dg.reward.goldBase * lvScale);
-            var dgGem = Math.floor(dg.reward.gemBase * lvScale);
-            var dgExp = Math.floor(dg.reward.expBase * lvScale);
-            this.gainGold(dgGold); if (dgGem > 0) gameState.gem += dgGem; this.gainExp(dgExp);
-            dungeonBonus = {name: dg.name, gold: dgGold, gem: dgGem, exp: dgExp, type: dg.type};
-            // 秘境装备掉落率更高
-            if (dg.type === 'equip' || dg.type === 'all') { var extraDrop = this.rollEquipDrop(); if (extraDrop && !drop) drop = extraDrop; }
-        }
-    }
     // 装备掉落
     var drop = this.rollEquipDrop();
     if (gameState.buffRage > 0) gameState.buffRage--;
-    var result = {exp: e.exp, gold: e.gold, luckDrop: luckDrop, equipDrop: drop, isBoss: e.isBoss, artHealAmt: artHealAmt, dungeonBonus: dungeonBonus};
+    var result = {exp: e.exp, gold: e.gold, luckDrop: luckDrop, equipDrop: drop, isBoss: e.isBoss, artHealAmt: artHealAmt};
     gameState.currentEnemy = null; gameState.battleMode = null;
     this.emit('winBattle', result);
     this.checkAchievements();

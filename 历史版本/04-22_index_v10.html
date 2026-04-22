@@ -48,18 +48,6 @@ body{font-family:'Noto Serif SC',serif;background:var(--bg-warm);color:var(--tex
 .btn-small:hover{background:var(--vermilion);color:#fff;border-color:var(--vermilion);}
 .enemy-card{display:flex;gap:15px;align-items:center;background:rgba(74,55,40,0.15);padding:12px 15px;border-radius:5px;transition:transform 0.1s;}
 .enemy-card.boss-card{background:rgba(139,0,0,0.16);border:2px solid var(--vermilion);}
-.challenge-section-title{font-size:0.85em;color:var(--gold-accent);margin:6px 0 4px;font-weight:bold;border-bottom:1px solid rgba(212,175,55,0.3);padding-bottom:3px;}
-.challenge-item{display:flex;align-items:center;gap:8px;padding:6px 8px;margin:3px 0;background:rgba(74,55,40,0.12);border:1px solid rgba(74,55,40,0.2);border-radius:4px;cursor:pointer;transition:all 0.15s;font-size:0.85em;}
-.challenge-item:hover{background:rgba(74,55,40,0.25);border-color:var(--gold-accent);}
-.challenge-item.locked{opacity:0.4;cursor:not-allowed;}
-.challenge-item.locked:hover{background:rgba(74,55,40,0.12);border-color:rgba(74,55,40,0.2);}
-.challenge-item .ci-icon{font-size:1.3em;width:28px;text-align:center;}
-.challenge-item .ci-info{flex:1;}
-.challenge-item .ci-name{font-weight:bold;}
-.challenge-item .ci-desc{font-size:0.75em;color:#999;margin-top:1px;}
-.challenge-item .ci-tag{font-size:0.65em;padding:1px 5px;border-radius:2px;background:var(--vermilion);color:#fff;}
-.challenge-item .ci-tag.dungeon{background:var(--jade-green);color:#fff;}
-.challenge-item .ci-cost{font-size:0.75em;color:#c0392b;}
 .enemy-card.shake{animation:shakeAnim 0.3s;}
 @keyframes shakeAnim{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}50%{transform:translateX(-4px);}}
 .enemy-avatar{font-size:2.5em;}
@@ -197,11 +185,6 @@ body{font-family:'Noto Serif SC',serif;background:var(--bg-warm);color:var(--tex
 </div>
 <button class="main-btn" id="battle-btn" style="margin-top:10px;grid-column:1/-1;"><i class="fas fa-crosshairs" style="display:block;font-size:1.4em;"></i>斩妖除魔</button>
 <button class="main-btn" id="boss-btn" style="margin-top:6px;grid-column:1/-1;border-color:var(--vermilion);color:var(--vermilion);display:none;"><i class="fas fa-skull" style="display:block;font-size:1.4em;"></i>挑战Boss</button>
-<button class="main-btn" id="challenge-btn" style="margin-top:6px;grid-column:1/-1;border-color:var(--gold-accent);color:var(--gold-accent);"><i class="fas fa-torii-gate" style="display:block;font-size:1.4em;"></i>秘境挑战<div class="hint">自选Boss与秘境</div></button>
-<div id="challenge-panel" style="display:none;margin-top:8px;">
-    <div id="challenge-bosses" style="margin-bottom:8px;"></div>
-    <div id="challenge-dungeons"></div>
-</div>
 <div class="battle-log" id="battle-log"><div class="battle-msg system">欢迎来到放置修仙世界，道友。</div></div>
 </div>
 <div id="bottom-selector">
@@ -265,10 +248,8 @@ var BGM = {
 var ENEMY_ICONS = {
     wolf:'<i class="fas fa-paw"></i>', boar:'<i class="fas fa-horse"></i>',
     snake:'<i class="fas fa-staff-snake"></i>', bear:'<i class="fas fa-paw"></i>',
-    tiger:'<i class="fas fa-paw"></i>', bandit:'<i class="fas fa-user-ninja"></i>',
-    fox:'<i class="fas fa-cat"></i>', dragon:'<i class="fas fa-dragon"></i>',
-    demon:'<i class="fas fa-skull"></i>', ninefox:'<i class="fas fa-fire"></i>',
-    ancient:'<i class="fas fa-spider"></i>', tianmo:'<i class="fas fa-hat-wizard"></i>'
+    tiger:'<i class="fas fa-paw"></i>', dragon:'<i class="fas fa-dragon"></i>',
+    demon:'<i class="fas fa-skull"></i>', ancient:'<i class="fas fa-spider"></i>'
 };
 var EQUIP_ICONS = {
     weapon:'<i class="fas fa-hammer"></i>', armor:'<i class="fas fa-vest"></i>', acc:'<i class="fas fa-ring"></i>', acc1:'<i class="fas fa-ring"></i>', acc2:'<i class="fas fa-ring"></i>'
@@ -341,7 +322,6 @@ core.on('winBattle', function(d) {
     if (d.artHealAmt > 0) addBattleLog('嗜血诀恢复 ' + d.artHealAmt + ' 点生命', 'system');
     if (d.luckDrop) addBattleLog('幸运加成！+' + d.luckDrop.gold + '金币 +1宝石', 'system');
     if (d.isBoss) addBattleLog('获得 1 宝石 +1 悟性点', 'system');
-    if (d.dungeonBonus) addBattleLog('【秘境奖励】' + d.dungeonBonus.name + ': +' + d.dungeonBonus.gold + '金币 +' + d.dungeonBonus.exp + '经验' + (d.dungeonBonus.gem > 0 ? ' +' + d.dungeonBonus.gem + '宝石' : ''), 'system');
     if (d.equipDrop) { addBattleLog('掉落装备：[' + qName[d.equipDrop.quality] + '] ' + d.equipDrop.name, 'system'); showDropGlow(); }
     addBattleLog('胜利！获得 ' + d.exp + ' 经验, ' + d.gold + ' 金币', 'system'); showToast('战斗胜利！', 'success');
     showBattleActions(false); updatePreviewEnemy(); updateUI();
@@ -399,11 +379,6 @@ function updateUI() {
     var availBoss = core.getAvailableBoss();
     if (availBoss && !gameState.currentEnemy) { bossBtn.style.display = 'block'; bossBtn.innerHTML = '<i class="fas fa-skull" style="display:block;font-size:1.4em;"></i>挑战' + availBoss.name; }
     else { bossBtn.style.display = 'none'; }
-    var challengeBtn = document.getElementById('challenge-btn');
-    if (gameState.currentEnemy) { challengeBtn.disabled = true; } else { challengeBtn.disabled = false; }
-    // 刷新挑战面板（如果已展开）
-    var panel = document.getElementById('challenge-panel');
-    if (panel.style.display !== 'none') renderChallengePanel();
 }
 function updateEnemyDisplay() {
     var e = gameState.currentEnemy; var card = document.getElementById('enemy-card');
@@ -418,73 +393,17 @@ function updateEnemyDisplay() {
     document.getElementById('enemy-hp-text').textContent = Math.max(0, e.hp) + '/' + e.maxHp;
 }
 function updatePreviewEnemy() {
-    var normal = core.getAvailableEnemies(); var t = normal;
+    var boss = core.getAvailableBoss(); var normal = core.getAvailableEnemies(); var t = boss || normal;
     document.getElementById('enemy-emoji').innerHTML = ENEMY_ICONS[t.id] || '<i class="fas fa-paw"></i>';
     document.getElementById('enemy-name').textContent = t.name;
     var typeTag = document.getElementById('enemy-type-tag'); var card = document.getElementById('enemy-card');
-    typeTag.style.display = 'none'; card.className = 'enemy-card';
+    if (t.isBoss) { typeTag.textContent = 'BOSS'; typeTag.style.display = 'inline'; typeTag.style.background = 'var(--vermilion)'; typeTag.style.color = '#fff'; card.className = 'enemy-card boss-card'; }
+    else { typeTag.style.display = 'none'; card.className = 'enemy-card'; }
     var sc = core.scaleEnemy(t);
     document.getElementById('enemy-hp-fill').style.width = '100%';
     document.getElementById('enemy-hp-text').textContent = sc.maxHp + '/' + sc.maxHp;
 }
 function showBattleActions(show) { document.getElementById('battle-actions').style.display = show ? 'flex' : 'none'; }
-
-/* ---- 秘境/Boss选择面板 ---- */
-function renderChallengePanel() {
-    var bossesEl = document.getElementById('challenge-bosses');
-    var dgEl = document.getElementById('challenge-dungeons');
-    // Boss列表
-    var allBosses = ENEMIES.filter(function(e){return e.isBoss;});
-    var bHtml = '<div class="challenge-section-title"><i class="fas fa-skull"></i> Boss 挑战</div>';
-    allBosses.forEach(function(b){
-        var ul = b.unlockLevel || 25;
-        var unlocked = gameState.level >= ul;
-        var cls = unlocked ? 'challenge-item' : 'challenge-item locked';
-        var icon = ENEMY_ICONS[b.id] || '<i class="fas fa-skull"></i>';
-        var sc = core.scaleEnemy(b);
-        bHtml += '<div class="' + cls + '" data-boss-id="' + b.id + '">';
-        bHtml += '<span class="ci-icon">' + icon + '</span>';
-        bHtml += '<span class="ci-info"><span class="ci-name">' + b.name + '</span>';
-        if (!unlocked) bHtml += ' <span class="ci-tag">Lv.' + ul + '解锁</span>';
-        else bHtml += ' <span class="ci-tag">HP ' + sc.maxHp + '</span>';
-        bHtml += '<div class="ci-desc">奖励: ' + sc.exp + '经验 ' + sc.gold + '金币</div>';
-        bHtml += '</span></div>';
-    });
-    bossesEl.innerHTML = bHtml;
-    // 秘境列表
-    var dgList = DUNGEONS;
-    var dHtml = '<div class="challenge-section-title"><i class="fas fa-torii-gate"></i> 秘境探索</div>';
-    dgList.forEach(function(dg){
-        var unlocked = gameState.level >= dg.unlockLevel;
-        var cls = unlocked ? 'challenge-item' : 'challenge-item locked';
-        var icon = '<i class="fas ' + dg.icon + '"></i>';
-        dHtml += '<div class="' + cls + '" data-dungeon-id="' + dg.id + '">';
-        dHtml += '<span class="ci-icon">' + icon + '</span>';
-        dHtml += '<span class="ci-info"><span class="ci-name">' + dg.name + '</span>';
-        if (!unlocked) dHtml += ' <span class="ci-tag">Lv.' + dg.unlockLevel + '解锁</span>';
-        else dHtml += ' <span class="ci-tag dungeon">' + (dg.type==='gold'?'金币':dg.type==='exp'?'经验':dg.type==='gem'?'宝石':dg.type==='equip'?'装备':'综合') + '</span>';
-        dHtml += '<div class="ci-desc">' + dg.desc + '</div>';
-        dHtml += '</span>';
-        if (unlocked) dHtml += '<span class="ci-cost"><i class="fas fa-bolt"></i>' + dg.cost + '</span>';
-        dHtml += '</div>';
-    });
-    dgEl.innerHTML = dHtml;
-    // 绑定点击
-    bossesEl.querySelectorAll('.challenge-item:not(.locked)').forEach(function(el){
-        el.onclick = function(){
-            var id = el.getAttribute('data-boss-id');
-            core.startBossBattleById(id);
-            document.getElementById('challenge-panel').style.display = 'none';
-        };
-    });
-    dgEl.querySelectorAll('.challenge-item:not(.locked)').forEach(function(el){
-        el.onclick = function(){
-            var id = el.getAttribute('data-dungeon-id');
-            core.enterDungeon(id);
-            document.getElementById('challenge-panel').style.display = 'none';
-        };
-    });
-}
 
 /* ---- 模态框渲染 ---- */
 function showModal(tab) {
@@ -1177,11 +1096,6 @@ function bindEvents() {
     document.getElementById('auto-cultivate-btn').onclick = function(){gameState.autoCultivate = !gameState.autoCultivate; updateUI(); showToast(gameState.autoCultivate?'闭关已开启':'闭关已关闭','success');};
     document.getElementById('battle-btn').onclick = function(){core.startBattle();};
     document.getElementById('boss-btn').onclick = function(){core.startBossBattle();};
-    document.getElementById('challenge-btn').onclick = function(){
-        var panel = document.getElementById('challenge-panel');
-        if (panel.style.display === 'none') { panel.style.display = 'block'; renderChallengePanel(); }
-        else { panel.style.display = 'none'; }
-    };
     document.getElementById('ba-attack').onclick = function(){core.playerAttack();};
     document.getElementById('ba-skill').onclick = function(){core.playerSkill();};
     document.getElementById('ba-heal').onclick = function(){core.playerHeal();};
