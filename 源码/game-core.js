@@ -685,9 +685,8 @@ GameCore.prototype.startBattle = function() {
     if (gameState.currentEnemy) { this.emit('warning', {msg: '当前有战斗进行中'}); return; }
     if (gameState.hp <= 0) { gameState.hp = gameState.maxHp; }
     this.initDailyTasks(); gameState.stats.totalBattlesDay++;
-    var boss = this.getAvailableBoss(); var tpl;
-    if (boss && Math.random() < 0.25) tpl = boss; else tpl = this.getAvailableEnemies();
-    gameState.currentEnemy = this.scaleEnemy(tpl); gameState.battleMode = (tpl.isBoss && !gameState.autoBattle) ? 'manual' : 'auto';
+    var tpl = this.getAvailableEnemies();
+    gameState.currentEnemy = this.scaleEnemy(tpl); gameState.battleMode = 'auto';
     gameState.battleShield = 0;
     if (this.hasArt('aura_shield')) { gameState.battleShield = Math.floor(gameState.maxHp * this.getArtEffect('aura_shield')); }
     this.emit('battleStart', {enemy: gameState.currentEnemy, isBoss: tpl.isBoss, shield: gameState.battleShield});

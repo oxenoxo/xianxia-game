@@ -198,7 +198,6 @@ body{font-family:'Noto Serif SC',serif;background:var(--bg-warm);color:var(--tex
     <button class="ba-btn" id="ba-autoskill" style="font-size:0.75em;"><i class="fas fa-magic"></i> <span id="autoskill-label">自动技能:开</span></button>
 </div>
 <button class="main-btn" id="battle-btn" style="margin-top:10px;grid-column:1/-1;"><i class="fas fa-crosshairs" style="display:block;font-size:1.4em;"></i>斩妖除魔</button>
-<button class="main-btn" id="boss-btn" style="margin-top:6px;grid-column:1/-1;border-color:var(--vermilion);color:var(--vermilion);display:none;"><i class="fas fa-skull" style="display:block;font-size:1.4em;"></i>挑战Boss</button>
 <button class="main-btn" id="challenge-btn" style="margin-top:6px;grid-column:1/-1;border-color:var(--gold-accent);color:var(--gold-accent);"><i class="fas fa-torii-gate" style="display:block;font-size:1.4em;"></i>秘境挑战<div class="hint">自选Boss与秘境</div></button>
 <div id="challenge-panel" style="display:none;margin-top:8px;">
     <div id="challenge-bosses" style="margin-bottom:8px;"></div>
@@ -414,10 +413,6 @@ function updateUI() {
     var battleBtn = document.getElementById('battle-btn');
     if (gameState.currentEnemy) { battleBtn.disabled = true; battleBtn.innerHTML = '<i class="fas fa-crosshairs" style="display:block;font-size:1.4em;"></i>战斗中...'; }
     else { battleBtn.disabled = false; battleBtn.innerHTML = '<i class="fas fa-crosshairs" style="display:block;font-size:1.4em;"></i>斩妖除魔'; }
-    var bossBtn = document.getElementById('boss-btn');
-    var availBoss = core.getAvailableBoss();
-    if (availBoss && !gameState.currentEnemy) { bossBtn.style.display = 'block'; bossBtn.innerHTML = '<i class="fas fa-skull" style="display:block;font-size:1.4em;"></i>挑战' + availBoss.name; }
-    else { bossBtn.style.display = 'none'; }
     var challengeBtn = document.getElementById('challenge-btn');
     if (gameState.currentEnemy) { challengeBtn.disabled = true; } else { challengeBtn.disabled = false; }
     // 刷新挑战面板（如果已展开）
@@ -1204,7 +1199,6 @@ function bindEvents() {
         showToast(gameState.autoSkillEnabled?'自动技能已开启':'自动技能已关闭','system');
     };
     document.getElementById('battle-btn').onclick = function(){core.startBattle();};
-    document.getElementById('boss-btn').onclick = function(){core.startBossBattle();};
     document.getElementById('challenge-btn').onclick = function(){
         var panel = document.getElementById('challenge-panel');
         if (panel.style.display === 'none') { panel.style.display = 'block'; renderChallengePanel(); }
